@@ -1,4 +1,4 @@
-# 📦 Proyecto QUYCA
+# Proyecto QUYCA
 
 Este repositorio contiene los archivos necesarios para configurar y ejecutar un sistema basado en **ESP32-CAM** y **Raspberry Pi 3B+**.
 
