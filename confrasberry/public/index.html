@@ -331,6 +331,17 @@
         
         let currentImagePath = null;
         
+        // Audio para alerta de incendio
+        const alertAudio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
+        let isPlayingAlert = false;
+        
+        // Función para reproducir sonido de alerta
+        function playAlertSound() {
+            const audio = new Audio('/sounds/alert.mp3');  // Ruta del archivo
+            audio.volume = 0.5;
+            audio.play().catch(err => console.log('Error:', err));
+        }
+        
         // Función para convertir hora a zona horaria de Bogotá
         function toBogotaTime(dateString) {
             const date = new Date(dateString);
@@ -359,8 +370,6 @@
         socket.on('initialState', (status) => {
             updateDeviceStatus(status.esp32Connected, status.esp32IP);
             updateDetectionCount(status.totalDetections);
-            
-            // Actualizar estado de fuego según fireActive
             updateAlertStatus(status.fireActive, status.lastAlert ? status.lastAlert.timestamp : null);
         });
         
@@ -368,6 +377,11 @@
             console.log('Alerta recibida:', data);
             updateAlertStatus(data.detected, data.timestamp);
             updateDetectionCount(data.detections);
+            
+            // REPRODUCIR SONIDO SI SE DETECTA FUEGO
+            if (data.detected) {
+                playAlertSound();
+            }
         });
         
         socket.on('deviceStatus', (data) => {
@@ -506,14 +520,21 @@
         }
         
         function downloadImage() {
-            if (currentImagePath) {
-                const link = document.createElement('a');
-                link.href = currentImagePath;
-                link.download = 'fire_capture_' + Date.now() + '.jpg';
-                link.click();
-            } else {
+            if (!currentImagePath) {
                 alert('No hay imagen para descargar');
+                return;
             }
+            
+            // Extraer nombre del archivo de la ruta
+            const filename = currentImagePath.split('/').pop().split('?')[0];
+            
+            // Crear enlace temporal y descargar
+            const link = document.createElement('a');
+            link.href = currentImagePath;
+            link.download = filename || 'fire_capture.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         // Cargar historial inicial
