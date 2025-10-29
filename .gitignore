@@ -3,3 +3,35 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Raspberry Pi - Configuración privada
+confrasberry/telegram_config.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Imágenes capturadas
+fire_images/
+fire_monitor/images/
+confrasberry/public/latest.jpg
+
+# Logs
+*.log
+logs/

@@ -1,0 +1,14 @@
+# Fire Monitor - Python Requirements
+# Instalar con: pip install -r requirements.txt
+
+# MQTT
+paho-mqtt>=1.6.1
+
+# Procesamiento de imágenes
+Pillow>=10.0.0
+
+# HTTP requests para Telegram
+requests>=2.31.0
+
+# Base de datos SQLite (incluido en Python estándar)
+# No requiere instalación adicional

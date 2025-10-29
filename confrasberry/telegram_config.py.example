@@ -1,0 +1,59 @@
+"""
+EJEMPLO de configuración de Telegram
+Copia este archivo como 'telegram_config.py' y edita con tus datos
+"""
+
+# ============================================
+# CONFIGURACIÓN DE TELEGRAM
+# ============================================
+
+# Token del bot (obtenido de @BotFather)
+# Ejemplo: "123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+TELEGRAM_BOT_TOKEN = "REEMPLAZA_CON_TU_TOKEN_AQUI"
+
+# Chat ID del destinatario (obtenido de @userinfobot)
+# Puede ser un número positivo (chat personal) o negativo (grupo)
+# Ejemplo: "987654321" o "-987654321"
+TELEGRAM_CHAT_ID = "REEMPLAZA_CON_TU_CHAT_ID_AQUI"
+
+# Opciones de notificación
+TELEGRAM_ENABLED = True  # Cambiar a True después de configurar
+SEND_IMAGES = True  # Enviar imágenes capturadas junto con alertas
+ALERT_COOLDOWN = 300  # Segundos mínimos entre alertas (5 minutos)
+
+# Mensajes personalizados
+MESSAGES = {
+    'fire_detected': '🔥 ¡ALERTA DE INCENDIO DETECTADO!',
+    'fire_cleared': '✅ Alerta despejada - Situación normalizada',
+    'system_online': '🟢 Sistema de monitoreo iniciado',
+    'system_offline': '🔴 Sistema de monitoreo desconectado',
+    'capture_failed': '⚠️ Error al capturar imagen'
+}
+
+# ============================================
+# INSTRUCCIONES RÁPIDAS
+# ============================================
+"""
+1. Crear Bot:
+   - Busca @BotFather en Telegram
+   - Envía /newbot
+   - Sigue las instrucciones
+   - Copia el TOKEN
+
+2. Obtener Chat ID:
+   - Busca @userinfobot en Telegram
+   - Envía /start
+   - Copia el número que te da
+
+3. Configurar:
+   - Reemplaza TELEGRAM_BOT_TOKEN con tu token
+   - Reemplaza TELEGRAM_CHAT_ID con tu chat ID
+   - Guarda este archivo como 'telegram_config.py'
+
+4. Probar:
+   - Ejecuta: python test_telegram.py
+   - Deberías recibir un mensaje de prueba
+
+5. ¡Listo!
+   - El sistema ahora enviará notificaciones automáticamente
+"""
