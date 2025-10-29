@@ -69,8 +69,8 @@ int historyIndex = 0;
 // Control de tiempo
 unsigned long lastSensorRead = 0;
 unsigned long lastMqttPublish = 0;
-const unsigned long SENSOR_INTERVAL = 100;
-const unsigned long MQTT_PUBLISH_INTERVAL = 500;
+const unsigned long SENSOR_INTERVAL = 250;
+const unsigned long MQTT_PUBLISH_INTERVAL = 1000;
 
 // Control de alertas (evitar spam)
 bool lastAlertSent = false;
