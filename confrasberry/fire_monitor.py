@@ -297,12 +297,20 @@ def on_message(client, userdata, msg):
                             # Obtener datos de la alerta para contexto
                             alert_data = db.get_alert_by_id(current_alert_id)
                             if alert_data:
-                                telegram.send_fire_alert(
-                                    detections=alert_data.get('detections_count', 0),
-                                    timestamp=datetime.now(),
-                                    severity=alert_data.get('severity', 'MEDIUM'),
-                                    image_path=latest_image
-                                )
+                                # Crear caption con información de la alerta
+                                timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                severity = alert_data.get('severity', 'MEDIUM')
+                                detections = alert_data.get('detections_count', 0)
+                                
+                                caption = f"""
+📸 <b>Imagen de Alerta #{current_alert_id}</b>
+
+🔴 Severidad: {severity}
+📊 Detecciones: {detections}
+🕐 Captura: {timestamp_str}
+"""
+                                # Enviar solo la foto con caption (sin cooldown)
+                                telegram.send_photo(latest_image, caption=caption.strip())
                 
                 # Limpiar chunks
                 image_chunks.clear()
