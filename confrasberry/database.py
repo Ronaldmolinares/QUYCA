@@ -134,7 +134,7 @@ class FireMonitorDB:
             cursor = conn.execute('''
                 SELECT a.*, d.timestamp as detection_time
                 FROM alerts a
-                LEFT JOIN detections d ON a.detection_id = d.id
+                LEFT JOIN fire_detections d ON a.detection_id = d.id
                 WHERE a.id = ?
             ''', (alert_id,))
             row = cursor.fetchone()

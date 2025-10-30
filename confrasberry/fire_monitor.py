@@ -211,7 +211,7 @@ def on_message(client, userdata, msg):
                     # Calcular duración de la alerta
                     alert_data = db.get_alert_by_id(current_alert_id)
                     if alert_data:
-                        start_time = datetime.fromisoformat(alert_data['start_time'])
+                        start_time = datetime.fromisoformat(alert_data['created_at'])
                         duration = int((datetime.now() - start_time).total_seconds())
                         
                         # Enviar notificación de despeje
