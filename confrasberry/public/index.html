@@ -608,7 +608,7 @@
 
             // Crear elemento de audio
             if (!alertAudio) {
-                alertAudio = new Audio('/sounds/alert.mp3');
+                alertAudio = new Audio('sounds/alert.mp3');
                 alertAudio.loop = true;  // ← Reproducir en bucle
                 alertAudio.volume = 0.8;
             }
@@ -686,16 +686,6 @@
         socket.on('fireAlert', (data) => {
             updateAlertStatus(data.detected, data.timestamp);
             updateDetectionCount(data.detections);
-            
-            // Mostrar/ocultar botón según alerta
-            const stopBtn = document.getElementById('stopAlertBtn');
-            if (data.detected) {
-                stopBtn.style.display = 'block';  // ← Mostrar cuando hay fuego
-                playAlertSound();
-            } else {
-                stopBtn.style.display = 'none';   // ← Ocultar cuando se resuelve
-                stopAlert();
-            }
             loadAlerts();
         });
         
@@ -730,10 +720,16 @@
         function updateAlertStatus(detected, timestamp) {
             const alertBannerEl = document.getElementById('alertBanner');
             const lastAlertEl = document.getElementById('lastAlertTime');
+            const stopBtn = document.getElementById('stopAlertBtn');
+
             if (detected) {
                 alertBannerEl.classList.add('active');
+                stopBtn.style.display = 'block';
+                playAlertSound();
             } else {
                 alertBannerEl.classList.remove('active');
+                stopBtn.style.display = 'none';
+                stopAlert();
             }
             if (timestamp) {
                 const formattedTime = toBogotaTime(timestamp);
