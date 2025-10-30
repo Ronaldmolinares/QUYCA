@@ -799,6 +799,21 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => { /* ... */ });
+    io.on('connection', (socket) => {
+    // ...
+    socket.on('requestCapture', () => {
+        if (mqttClient.connected) {
+            mqttClient.publish(TOPIC_CAPTURE, 'CAPTURE');
+            console.log('📸 Captura solicitada desde web');
+            socket.emit('captureRequested', { success: true });
+        } else {
+            socket.emit('captureRequested', { 
+                success: false, 
+                error: 'MQTT no conectado' 
+            });
+        }
+    });
+});
 });
 
 // ============================================
