@@ -452,7 +452,7 @@ app.use(express.static(PUBLIC_DIR));
   }
 });
 
-// Middleware para servir imágenes con manejo de errores
+// // Middleware para servir imágenes con manejo de errores
 app.use('/images', (req, res, next) => {
   const filePath = path.join(IMAGES_DIR, req.path);
   
@@ -704,6 +704,72 @@ app.get('/api/health', (req, res) => {
     mqtt: mqttClient.connected,
     uptime: process.uptime()
   });
+});
+
+// Obtener estadísticas de los últimos 7 días
+app.get('/api/statistics', (req, res) => {
+  try {
+    const db = require('better-sqlite3')('/home/pi/fire_monitor/fire_monitor.db');
+    const stmt = db.prepare(`
+      SELECT 
+        date,
+        total_detections,
+        total_alerts,
+        images_captured
+      FROM daily_statistics
+      WHERE date >= date('now', '-7 days')
+      ORDER BY date ASC
+    `);
+    const statistics = stmt.all();
+    
+    res.json({
+      success: true,
+      data: statistics
+    });
+  } catch (error) {
+    console.error('Error obteniendo estadísticas:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo estadísticas'
+    });
+  }
+});
+
+// Obtener alertas con información de imágenes
+app.get('/api/alerts', (req, res) => {
+  try {
+    const db = require('better-sqlite3')('/home/pi/fire_monitor/fire_monitor.db');
+    const stmt = db.prepare(`
+      SELECT 
+        a.id,
+        a.alert_type,
+        a.severity,
+        a.status,
+        a.detections_count,
+        a.created_at,
+        a.resolved_at,
+        a.duration_seconds,
+        COUNT(ci.id) as images_count,
+        GROUP_CONCAT(ci.file_name) as image_files
+      FROM alerts a
+      LEFT JOIN captured_images ci ON a.id = ci.alert_id
+      GROUP BY a.id
+      ORDER BY a.created_at DESC
+      LIMIT 50
+    `);
+    const alerts = stmt.all();
+    
+    res.json({
+      success: true,
+      data: alerts
+    });
+  } catch (error) {
+    console.error('Error obteniendo alertas:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error obteniendo alertas'
+    });
+  }
 });
 
 // ============================================
