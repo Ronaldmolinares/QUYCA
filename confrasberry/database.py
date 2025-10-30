@@ -127,6 +127,21 @@ class FireMonitorDB:
         finally:
             conn.close()
     
+    def get_alert_by_id(self, alert_id: int) -> Optional[Dict]:
+        """Obtener una alerta específica por ID"""
+        conn = self.get_connection()
+        try:
+            cursor = conn.execute('''
+                SELECT a.*, d.timestamp as detection_time
+                FROM alerts a
+                LEFT JOIN detections d ON a.detection_id = d.id
+                WHERE a.id = ?
+            ''', (alert_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+    
     def update_alert_detections(self, alert_id: int, detections_count: int):
         """Actualizar contador de detecciones de una alerta"""
         conn = self.get_connection()
