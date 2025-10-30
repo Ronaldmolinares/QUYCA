@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS fire_detections (
 );
 
 -- Índice para consultas por fecha
-CREATE INDEX idx_fire_detections_timestamp ON fire_detections(timestamp DESC);
-CREATE INDEX idx_fire_detections_detected ON fire_detections(detected, timestamp);
+CREATE INDEX IF NOT EXISTS idx_fire_detections_timestamp ON fire_detections(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_fire_detections_detected ON fire_detections(detected, timestamp);
 
 -- Tabla de alertas (eventos de fuego agrupados)
 CREATE TABLE IF NOT EXISTS alerts (
@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 -- Índices para alertas
-CREATE INDEX idx_alerts_status ON alerts(status, created_at DESC);
-CREATE INDEX idx_alerts_created ON alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_created ON alerts(created_at DESC);
 
 -- Tabla de imágenes capturadas
 CREATE TABLE IF NOT EXISTS captured_images (
@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS captured_images (
 );
 
 -- Índices para imágenes
-CREATE INDEX idx_images_alert ON captured_images(alert_id);
-CREATE INDEX idx_images_capture_time ON captured_images(capture_time DESC);
-CREATE INDEX idx_images_trigger ON captured_images(capture_trigger);
+CREATE INDEX IF NOT EXISTS idx_images_alert ON captured_images(alert_id);
+CREATE INDEX IF NOT EXISTS idx_images_capture_time ON captured_images(capture_time DESC);
+CREATE INDEX IF NOT EXISTS idx_images_trigger ON captured_images(capture_trigger);
 
 -- Tabla de estado de dispositivos
 CREATE TABLE IF NOT EXISTS device_status (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS device_status (
 );
 
 -- Índice para dispositivos
-CREATE UNIQUE INDEX idx_device_id ON device_status(device_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_device_id ON device_status(device_id);
 
 -- Tabla de logs del sistema
 CREATE TABLE IF NOT EXISTS system_logs (
@@ -95,9 +95,9 @@ CREATE TABLE IF NOT EXISTS system_logs (
 );
 
 -- Índices para logs
-CREATE INDEX idx_logs_timestamp ON system_logs(timestamp DESC);
-CREATE INDEX idx_logs_level ON system_logs(log_level, timestamp DESC);
-CREATE INDEX idx_logs_component ON system_logs(component, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON system_logs(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_logs_level ON system_logs(log_level, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_logs_component ON system_logs(component, timestamp DESC);
 
 -- Tabla de configuración del sistema
 CREATE TABLE IF NOT EXISTS system_config (
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS system_config (
 );
 
 -- Índice para configuración
-CREATE UNIQUE INDEX idx_config_key ON system_config(key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_config_key ON system_config(key);
 
 -- Tabla de estadísticas diarias (para analytics)
 CREATE TABLE IF NOT EXISTS daily_statistics (
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS daily_statistics (
 );
 
 -- Índice para estadísticas
-CREATE UNIQUE INDEX idx_daily_stats_date ON daily_statistics(date DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_stats_date ON daily_statistics(date DESC);
 
 -- ============================================
 -- TRIGGERS para mantener integridad
