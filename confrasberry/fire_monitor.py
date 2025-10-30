@@ -206,21 +206,6 @@ def on_message(client, userdata, msg):
                     confidence=100
                 )
                 
-                # Resolver alerta activa si existe
-                if current_alert_id:
-                    # Calcular duración de la alerta
-                    alert_data = db.get_alert_by_id(current_alert_id)
-                    if alert_data:
-                        start_time = datetime.fromisoformat(alert_data['created_at'])
-                        duration = int((datetime.now() - start_time).total_seconds())
-                        
-                        # Enviar notificación de despeje
-                        telegram.send_clear_alert(duration=duration)
-                    
-                    db.resolve_alert(current_alert_id, status='RESOLVED')
-                    print(f"   ✓ Alerta {current_alert_id} resuelta")
-                    current_alert_id = None
-                
                 capture_requested = False
         
         # ===== METADATA DE IMAGEN =====
