@@ -522,11 +522,7 @@ mqttClient.on('message', (topic, message) => {
         systemStatus.fireActive = true;
         systemStatus.totalDetections = data.detections || 0;
         console.log(`🔥 Alerta de fuego recibida (Detecciones: ${data.detections}) - ${bogotaTime.toLocaleString('es-CO')}`);
-      } else {
-        // Marcar como seguro para cualquier alerta que NO sea FIRE_DETECTED
-        systemStatus.fireActive = false;
-        console.log(`✓ Alerta despejada (${data.alert}) - ${bogotaTime.toLocaleString('es-CO')}`);
-      }
+      } 
       
       // Emitir a todos los clientes web conectados
       io.emit('fireAlert', {
@@ -777,28 +773,32 @@ app.get('/api/alerts', (req, res) => {
 // ============================================
 
 io.on('connection', (socket) => {
-  console.log(`🔌 Cliente web conectado (${socket.id})`);
-  
-  // Enviar estado inicial
-  socket.emit('initialState', systemStatus);
-  
-  socket.on('disconnect', () => {
-    console.log(`🔌 Cliente web desconectado (${socket.id})`);
-  });
-  
-  // Manejar solicitud de captura desde web
-  socket.on('requestCapture', () => {
-    if (mqttClient.connected) {
-      mqttClient.publish(TOPIC_CAPTURE, 'CAPTURE');
-      console.log('📸 Captura solicitada desde web');
-      socket.emit('captureRequested', { success: true });
-    } else {
-      socket.emit('captureRequested', { 
-        success: false, 
-        error: 'MQTT no conectado' 
-      });
-    }
-  });
+    console.log(`🔌 Cliente web conectado (${socket.id})`);
+    socket.emit('initialState', systemStatus);
+
+    // Escuchar evento de resolución manual
+    socket.on('resolveAlert', () => {
+        try {
+            const db = require('better-sqlite3')('/home/pi/fire_monitor/fire_monitor.db');
+            // Buscar la alerta activa
+            const activeAlert = db.prepare("SELECT id FROM alerts WHERE status = 'ACTIVE' ORDER BY created_at DESC LIMIT 1").get();
+            if (activeAlert && activeAlert.id) {
+                db.prepare("UPDATE alerts SET status = 'RESOLVED', resolved_at = CURRENT_TIMESTAMP WHERE id = ?").run(activeAlert.id);
+                systemStatus.fireActive = false;
+                console.log(`✓ Alerta resuelta manualmente (ID: ${activeAlert.id})`);
+                // Notificar a todos los clientes que la alerta fue resuelta
+                io.emit('fireAlert', {
+                    detected: false,
+                    timestamp: new Date().toISOString(),
+                    detections: 0
+                });
+            }
+        } catch (err) {
+            console.error('Error resolviendo alerta:', err.message);
+        }
+    });
+
+    socket.on('disconnect', () => { /* ... */ });
 });
 
 // ============================================

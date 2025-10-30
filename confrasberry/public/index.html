@@ -630,6 +630,9 @@
             }
             isPlayingAlert = false;
             document.getElementById('stopAlertBtn').style.display = 'none';
+
+            // Emitir evento al servidor para resolver alerta
+            socket.emit('resolveAlert');
         }
 
         // ====== FUNCIONES DE TIEMPO ======
@@ -683,10 +686,15 @@
         socket.on('fireAlert', (data) => {
             updateAlertStatus(data.detected, data.timestamp);
             updateDetectionCount(data.detections);
+            
+            // Mostrar/ocultar botón según alerta
+            const stopBtn = document.getElementById('stopAlertBtn');
             if (data.detected) {
-                playAlertSound();  // ← Inicia el audio en bucle
+                stopBtn.style.display = 'block';  // ← Mostrar cuando hay fuego
+                playAlertSound();
             } else {
-                stopAlert();  // ← Detiene el audio cuando se resuelve la alerta
+                stopBtn.style.display = 'none';   // ← Ocultar cuando se resuelve
+                stopAlert();
             }
             loadAlerts();
         });
