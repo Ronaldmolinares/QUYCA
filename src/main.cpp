@@ -149,7 +149,7 @@ void captureAndSendImage() {
   Serial.printf("✓ Imagen capturada: %d bytes\n", fb->len);
 
   // CORRECCIÓN: Chunks más pequeños para evitar problemas de memoria
-  const int chunkSize = 3000;  // Reducido de 4000 a 3000
+  const int chunkSize = 2000;  // Reducido de 4000 a 2000
   const int totalChunks = (fb->len + chunkSize - 1) / chunkSize;
 
   // Metadata
