@@ -443,18 +443,19 @@ class FireMonitorDB:
     
     def update_daily_statistics(self, date, alerts=0, detections=0, images=0):
         """Actualizar estadísticas del día actual"""
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute("""
-            INSERT INTO daily_statistics (date, total_alerts, total_detections, images_captured)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(date) DO UPDATE SET
-                total_alerts = total_alerts + ?,
-                total_detections = total_detections + ?,
-                images_captured = images_captured + ?
-        """, (date, alerts, detections, images, alerts, detections, images))
-        conn.commit()
-        conn.close()
+        conn = self.get_connection()
+        try:
+            conn.execute("""
+                INSERT INTO daily_statistics (date, total_alerts, total_detections, images_captured)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(date) DO UPDATE SET
+                    total_alerts = total_alerts + ?,
+                    total_detections = total_detections + ?,
+                    images_captured = images_captured + ?
+            """, (date, alerts, detections, images, alerts, detections, images))
+            conn.commit()
+        finally:
+            conn.close()
     
     def get_statistics_range(self, days: int = 7) -> List[Dict]:
         """Obtener estadísticas de los últimos N días"""
