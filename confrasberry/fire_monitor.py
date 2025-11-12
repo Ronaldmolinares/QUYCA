@@ -97,6 +97,10 @@ def save_image(image_data, filename=None, metadata=None):
                 trigger='AUTO' if capture_requested else 'MANUAL'
             )
         
+        # Al insertar una imagen, actualizar estadísticas diarias
+        fecha_actual = datetime.now().strftime("%Y-%m-%d")
+        db.update_daily_statistics(date=fecha_actual, images=1)
+        
         return filepath
         
     except Exception as e:
@@ -167,6 +171,10 @@ def on_message(client, userdata, msg):
                     confidence=100
                 )
                 
+                # Al insertar una detección, actualizar estadísticas diarias
+                fecha_actual = datetime.now().strftime("%Y-%m-%d")
+                db.update_daily_statistics(date=fecha_actual, detections=1)
+                
                 # Verificar si ya hay una alerta activa
                 active_alert = db.get_active_alert()
                 
@@ -192,6 +200,10 @@ def on_message(client, userdata, msg):
                         timestamp=last_alert_time,
                         severity=severity
                     )
+
+                    # ← AGREGAR AQUÍ LA ACTUALIZACIÓN DE ALERTAS
+                    fecha_actual = datetime.now().strftime("%Y-%m-%d")
+                    db.update_daily_statistics(date=fecha_actual, alerts=1)
                 
                 # Solicitar captura automáticamente
                 request_capture()

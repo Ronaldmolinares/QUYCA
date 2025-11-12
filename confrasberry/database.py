@@ -441,32 +441,18 @@ class FireMonitorDB:
         finally:
             conn.close()
     
-    def update_daily_statistics(self):
+    def update_daily_statistics(self, date, alerts=0, detections=0, images=0):
         """Actualizar estadísticas del día actual"""
         conn = self.get_connection()
         try:
-            today = datetime.now().strftime('%Y-%m-%d')
-            
-            cursor = conn.execute('''
-                SELECT 
-                    COUNT(DISTINCT CASE WHEN detected = 1 THEN id END) as detections,
-                    (SELECT COUNT(*) FROM alerts WHERE DATE(created_at) = ?) as alerts,
-                    (SELECT COUNT(*) FROM captured_images WHERE DATE(capture_time) = ?) as images
-                FROM fire_detections
-                WHERE DATE(timestamp) = ?
-            ''', (today, today, today))
-            
-            row = cursor.fetchone()
-            
-            conn.execute('''
-                INSERT INTO daily_statistics 
-                (date, total_detections, total_alerts, images_captured)
+            conn.execute("""
+                INSERT INTO daily_statistics (date, total_alerts, total_detections, images_captured)
                 VALUES (?, ?, ?, ?)
                 ON CONFLICT(date) DO UPDATE SET
-                    total_detections = excluded.total_detections,
-                    total_alerts = excluded.total_alerts,
-                    images_captured = excluded.images_captured
-            ''', (today, row['detections'], row['alerts'], row['images']))
+                    total_alerts = total_alerts + ?,
+                    total_detections = total_detections + ?,
+                    images_captured = images_captured + ?
+            """, (date, alerts, detections, images, alerts, detections, images))
             conn.commit()
         finally:
             conn.close()
