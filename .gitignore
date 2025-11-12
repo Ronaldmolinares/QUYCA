@@ -5,7 +5,7 @@
 .vscode/ipch
 
 # Raspberry Pi - Configuración privada
-confrasberry/telegram_config.py
+# confrasberry/telegram_config.py
 
 # Python
 __pycache__/
