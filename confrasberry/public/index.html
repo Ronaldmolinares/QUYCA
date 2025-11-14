@@ -889,11 +889,6 @@
         <p class="subtitle">
           Sistema de monitoreo en tiempo real para prevención de incendios
         </p>
-        <div class="status-card">
-          <div class="status-icon" id="deviceIcon">📡</div>
-          <div class="status-label">ESP32-CAM</div>
-          <div class="status-value" id="deviceStatus">Conectando...</div>
-        </div>
       </div>
 
       <!-- Sistema de alertas mejorado -->
@@ -934,6 +929,11 @@
             Se ha detectado fuego en el área monitoreada. Tome las medidas
             necesarias inmediatamente.
           </p>
+          <div
+            class="image-container"
+            id="alertImageContainer"
+            style="margin-bottom: 25px"
+          ></div>
           <div class="alert-actions">
             <button
               class="alert-button primary"
@@ -947,14 +947,7 @@
               onclick="acknowledgeAlert()"
               aria-describedby="alertTitle"
             >
-              SOLO CERRAR MODAL
-            </button>
-            <button
-              class="alert-button"
-              onclick="stopAlert()"
-              aria-describedby="alertTitle"
-            >
-              DETENER SONIDO
+              X
             </button>
           </div>
         </div>
@@ -1350,27 +1343,41 @@
         const body = document.body;
 
         if (detected) {
-          // Activar banner sticky
           alertBannerEl.classList.add("active");
           body.classList.add("alert-active");
-
-          // Mostrar modal de pantalla completa
           alertOverlayEl.classList.add("active");
-
-          // Configurar accesibilidad
           alertOverlayEl.setAttribute("aria-hidden", "false");
-          document.body.style.overflow = "hidden"; // Prevenir scroll
-
-          // Enfocar el modal para lectores de pantalla
+          document.body.style.overflow = "hidden";
           setTimeout(() => {
             const alertTitle = document.getElementById("alertTitle");
             if (alertTitle) alertTitle.focus();
           }, 300);
-
           if (stopBtn) stopBtn.style.display = "block";
           playAlertSound();
 
-          // Anunciar alerta para lectores de pantalla
+          // === BLOQUE PARA MOSTRAR LA IMAGEN EN EL MODAL ===
+          const alertImageContainer = document.getElementById(
+            "alertImageContainer"
+          );
+          if (alertImageContainer) {
+            if (detected && currentImagePath) {
+              alertImageContainer.innerHTML =
+                '<img src="' +
+                currentImagePath +
+                '" alt="Captura de incendio" style="width:100%;height:auto;display:block;" onerror="handleImageError(this)">' +
+                '<div class="image-overlay">' +
+                (timestamp ? toBogotaTime(timestamp) : "") +
+                "</div>";
+            } else {
+              alertImageContainer.innerHTML =
+                '<div class="no-image">' +
+                '<div class="no-image-icon">📷</div>' +
+                "<p>Esperando primera captura...</p>" +
+                "</div>";
+            }
+          }
+          // === FIN DEL BLOQUE ===
+
           announceAlert(
             "Alerta de incendio detectada. Revise el área inmediatamente."
           );
