@@ -125,6 +125,35 @@
         border-color: var(--primary);
       }
 
+      /* Estados específicos de la tarjeta de conexión */
+      .status-card[data-status="online"] {
+        border-color: var(--success);
+        background: linear-gradient(
+          135deg,
+          var(--card) 0%,
+          rgba(45, 125, 50, 0.05) 100%
+        );
+      }
+
+      .status-card[data-status="offline"] {
+        border-color: var(--error);
+        background: linear-gradient(
+          135deg,
+          var(--card) 0%,
+          rgba(198, 40, 40, 0.05) 100%
+        );
+      }
+
+      .status-card[data-status="online"]:hover {
+        border-color: var(--success);
+        box-shadow: 0 8px 16px rgba(45, 125, 50, 0.2);
+      }
+
+      .status-card[data-status="offline"]:hover {
+        border-color: var(--error);
+        box-shadow: 0 8px 16px rgba(198, 40, 40, 0.2);
+      }
+
       .status-icon {
         font-size: 3em;
         margin-bottom: 10px;
@@ -315,32 +344,91 @@
         padding: 40px;
         border-radius: 20px;
         text-align: center;
-        max-width: 600px;
+        max-width: 700px; /* Aumentado para acomodar la imagen */
         width: 90%;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         border: 3px solid #ffffff;
         animation: alertPulse 1s ease-in-out infinite alternate,
           slideIn 0.5s ease-out;
+        position: relative; /* Para posicionar el botón X */
       }
 
-      .alert-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        animation: shake 0.8s ease-in-out infinite;
+      /* Botón X para cerrar modal */
+      .alert-close-x {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        color: #ffffff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 24px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        line-height: 1;
       }
 
-      .alert-title {
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 15px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
+      .alert-close-x:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.8);
+        transform: scale(1.1);
       }
 
-      .alert-message {
-        font-size: 1.2rem;
-        margin-bottom: 30px;
-        line-height: 1.4;
+      .alert-close-x:focus {
+        outline: 3px solid rgba(255, 255, 255, 0.5);
+        outline-offset: 2px;
+      }
+
+      /* Contenedor de imagen en el modal de alerta */
+      .alert-image-container {
+        margin: 20px 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        overflow: hidden;
+        min-height: 200px;
+        max-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .alert-image-container img {
+        width: 100%;
+        height: auto;
+        max-height: 300px;
+        object-fit: contain;
+        border-radius: 10px;
+      }
+
+      .alert-image-placeholder {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 20px;
+      }
+
+      .alert-image-icon {
+        font-size: 3em;
+        margin-bottom: 10px;
+        opacity: 0.5;
+      }
+
+      .alert-image-timestamp {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-size: 0.8em;
       }
 
       .alert-actions {
@@ -922,6 +1010,15 @@
         aria-labelledby="alertTitle"
       >
         <div class="alert-modal">
+          <!-- Botón X para cerrar en la esquina superior derecha -->
+          <button
+            class="alert-close-x"
+            onclick="acknowledgeAlert()"
+            aria-label="Cerrar modal de alerta"
+          >
+            <span aria-hidden="true">&times;</span>
+          </button>
+
           <div
             class="alert-icon"
             role="img"
@@ -934,6 +1031,15 @@
             Se ha detectado fuego en el área monitoreada. Tome las medidas
             necesarias inmediatamente.
           </p>
+
+          <!-- Contenedor para la imagen de la alerta -->
+          <div class="alert-image-container" id="alertImageContainer">
+            <div class="alert-image-placeholder">
+              <div class="alert-image-icon">📷</div>
+              <p>Capturando imagen...</p>
+            </div>
+          </div>
+
           <div class="alert-actions">
             <button
               class="alert-button primary"
@@ -941,20 +1047,6 @@
               aria-describedby="alertTitle"
             >
               RESOLVER ALERTA
-            </button>
-            <button
-              class="alert-button"
-              onclick="acknowledgeAlert()"
-              aria-describedby="alertTitle"
-            >
-              SOLO CERRAR MODAL
-            </button>
-            <button
-              class="alert-button"
-              onclick="stopAlert()"
-              aria-describedby="alertTitle"
-            >
-              DETENER SONIDO
             </button>
           </div>
         </div>
@@ -1189,6 +1281,15 @@
         const stopBtn = document.getElementById("stopAlertBtn");
         if (stopBtn) stopBtn.style.display = "none";
 
+        // Cerrar el modal de alerta si está activo
+        const alertOverlayEl = document.getElementById("alertOverlay");
+        if (alertOverlayEl && alertOverlayEl.classList.contains("active")) {
+          alertOverlayEl.classList.remove("active");
+          document.body.classList.remove("alert-active");
+          alertOverlayEl.setAttribute("aria-hidden", "true");
+          document.body.style.overflow = "";
+        }
+
         announceAlert("Sonido de alerta detenido");
       }
 
@@ -1328,16 +1429,29 @@
 
         if (connected) {
           statusEl.innerHTML = '<span class="status-online">Conectado</span>';
-          iconEl.textContent = "✓";
-          statusEl.setAttribute("aria-label", "ESP32-CAM conectado");
-          if (statusCard) statusCard.setAttribute("data-status", "online");
-          announceAlert("Dispositivo ESP32-CAM conectado");
+          iconEl.textContent = "✅"; // Cambiar a check verde
+          statusEl.setAttribute(
+            "aria-label",
+            `ESP32-CAM conectado${ip ? ` - IP: ${ip}` : ""}`
+          );
+          if (statusCard) {
+            statusCard.setAttribute("data-status", "online");
+            statusCard.style.borderColor = "var(--success)";
+            statusCard.style.boxShadow = "0 4px 12px rgba(45, 125, 50, 0.2)";
+          }
+          announceAlert(
+            `Dispositivo ESP32-CAM conectado${ip ? ` con IP ${ip}` : ""}`
+          );
         } else {
           statusEl.innerHTML =
             '<span class="status-offline">Desconectado</span>';
-          iconEl.textContent = "✕";
+          iconEl.textContent = "❌"; // Cambiar a X roja
           statusEl.setAttribute("aria-label", "ESP32-CAM desconectado");
-          if (statusCard) statusCard.setAttribute("data-status", "offline");
+          if (statusCard) {
+            statusCard.setAttribute("data-status", "offline");
+            statusCard.style.borderColor = "var(--error)";
+            statusCard.style.boxShadow = "0 4px 12px rgba(198, 40, 40, 0.2)";
+          }
           announceAlert("Dispositivo ESP32-CAM desconectado");
         }
       }
@@ -1360,6 +1474,9 @@
           // Configurar accesibilidad
           alertOverlayEl.setAttribute("aria-hidden", "false");
           document.body.style.overflow = "hidden"; // Prevenir scroll
+
+          // Cargar imagen actual en el modal
+          updateAlertImage();
 
           // Enfocar el modal para lectores de pantalla
           setTimeout(() => {
@@ -1393,474 +1510,156 @@
         }
       }
 
-      // Nuevas funciones para manejo de alertas
-      function acknowledgeAlert() {
-        const alertOverlayEl = document.getElementById("alertOverlay");
-        alertOverlayEl.classList.remove("active");
-        alertOverlayEl.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
+      // Nueva función para actualizar la imagen en el modal de alerta
+      function updateAlertImage() {
+        const alertImageContainer = document.getElementById(
+          "alertImageContainer"
+        );
 
-        // Mantener el banner pero quitar el modal
-        announceAlert("Alerta reconocida");
+        if (!alertImageContainer) return;
+
+        if (currentImagePath) {
+          // Si hay una imagen actual, mostrarla
+          const timestamp = new Date().toLocaleString("es-CO", {
+            timeZone: "America/Bogota",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+
+          alertImageContainer.innerHTML = `
+            <img src="${currentImagePath}" 
+                 alt="Imagen de la alerta de incendio" 
+                 onerror="handleAlertImageError(this)">
+            <div class="alert-image-timestamp">${timestamp}</div>
+          `;
+        } else {
+          // Si no hay imagen, intentar cargar la más reciente
+          fetch("/api/images")
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.data.length > 0) {
+                const latestImage = data.data[0];
+                const timestamp = formatTimestamp(latestImage.timestamp);
+
+                alertImageContainer.innerHTML = `
+                  <img src="${latestImage.path}" 
+                       alt="Imagen de la alerta de incendio" 
+                       onerror="handleAlertImageError(this)">
+                  <div class="alert-image-timestamp">${timestamp}</div>
+                `;
+              } else {
+                showAlertImagePlaceholder();
+              }
+            })
+            .catch((err) => {
+              console.error("Error cargando imagen para alerta:", err);
+              showAlertImagePlaceholder();
+            });
+        }
       }
 
-      function dismissBanner() {
-        resolveAlert(); // Usar la función centralizada
+      function handleAlertImageError(img) {
+        console.error("Error cargando imagen en modal de alerta:", img.src);
+        showAlertImagePlaceholder();
       }
 
-      // Función para anuncios de accesibilidad
-      function announceAlert(message) {
-        const announcement = document.createElement("div");
-        announcement.setAttribute("aria-live", "assertive");
-        announcement.setAttribute("aria-atomic", "true");
-        announcement.className = "sr-only";
-        announcement.textContent = message;
-        document.body.appendChild(announcement);
-
-        setTimeout(() => {
-          if (document.body.contains(announcement)) {
-            document.body.removeChild(announcement);
-          }
-        }, 1000);
+      function showAlertImagePlaceholder() {
+        const alertImageContainer = document.getElementById(
+          "alertImageContainer"
+        );
+        if (alertImageContainer) {
+          alertImageContainer.innerHTML = `
+            <div class="alert-image-placeholder">
+              <div class="alert-image-icon">📷</div>
+              <p>Imagen no disponible</p>
+            </div>
+          `;
+        }
       }
 
-      // Función mejorada para resolver alertas que es compatible con server.js
-      function resolveAlert() {
-        const alertBannerEl = document.getElementById("alertBanner");
-        const alertOverlayEl = document.getElementById("alertOverlay");
-        const body = document.body;
-
-        // Cerrar UI de alerta
-        alertBannerEl.classList.remove("active");
-        alertOverlayEl.classList.remove("active");
-        body.classList.remove("alert-active");
-
-        // Restaurar accesibilidad
-        alertOverlayEl.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-
-        // Detener sonido
-        stopAlert();
-
-        // Emitir evento al servidor (como espera server.js)
-        socket.emit("resolveAlert");
-
-        // Anuncio para accesibilidad
-        announceAlert("Alerta resuelta exitosamente");
-
-        console.log("🔧 Alerta resuelta desde interfaz web");
-      }
-
-      function updateDetectionCount(count) {
-        // Actualizar el total en las estadísticas usando función helper
-        safeSetText("totalDetections", count || 0);
-        console.log(`📊 Detecciones actualizadas: ${count || 0}`);
-      }
-
+      // Actualizar función displayImage para también actualizar el modal si está activo
       function displayImage(path, timestamp) {
         const container = document.getElementById("imageContainer");
         const displayTime = timestamp || toBogotaTime(new Date());
 
-        // PROBLEMA: Esta concatenación está mal formada
-        container.innerHTML =
-          '<img src="' +
-          path +
-          '" alt="Captura de incendio" onerror="handleImageError(this)">' +
-          '<div class="image-overlay">' +
-          displayTime +
-          "</div>";
+        // Validar parámetros
+        if (!path) {
+          console.error("❌ displayImage: path es undefined o vacío");
+          showNoImageFallback(container);
+          return;
+        }
+
+        // Crear HTML de forma segura
+        const imgHTML = `
+          <img src="${path}" 
+               alt="Captura de incendio" 
+               onerror="handleImageError(this)"
+               onload="console.log('✅ Imagen cargada exitosamente: ${path}')">
+          <div class="image-overlay">${displayTime}</div>
+        `;
+
+        container.innerHTML = imgHTML;
+        currentImagePath = path; // Actualizar la imagen actual
+
+        // Si el modal de alerta está activo, actualizar también la imagen ahí
+        const alertOverlay = document.getElementById("alertOverlay");
+        if (alertOverlay && alertOverlay.classList.contains("active")) {
+          updateAlertImage();
+        }
 
         const downloadBtn = document.getElementById("downloadBtn");
         if (downloadBtn) {
           downloadBtn.disabled = false;
         }
+
+        console.log(`📸 Intentando mostrar imagen: ${path}`);
         loadImageHistory();
       }
 
-      function handleImageError(img) {
-        img.parentElement.innerHTML =
-          '<div class="no-image">' +
-          '<div class="no-image-icon">Error</div>' +
-          "<p>Error cargando imagen</p>" +
-          "</div>";
+      function showNoImageFallback(container) {
+        container.innerHTML = `
+          <div class="no-image">
+            <div class="no-image-icon">📷</div>
+            <p>No hay imagen disponible</p>
+            <button onclick="requestCapture()" style="margin-top: 10px;">Capturar Nueva Imagen</button>
+          </div>`;
       }
 
-      function loadImageHistory() {
-        fetch("/api/images")
-          .then((res) => res.json())
-          .then((data) => {
-            const historyList = document.getElementById("historyList");
-            if (!historyList) return;
+      // Mejorar función updateDeviceStatus para cambiar mejor el estado
+      function updateDeviceStatus(connected, ip) {
+        const statusEl = document.getElementById("deviceStatus");
+        const iconEl = document.getElementById("deviceIcon");
+        const statusCard = statusEl.closest(".status-card");
 
-            if (data.success && data.data.length > 0) {
-              historyList.innerHTML = data.data
-                .map(
-                  (img) =>
-                    '<div class="history-item" onclick="displayImage(\'' +
-                    img.path +
-                    "')\">" +
-                    "<span>" +
-                    img.filename +
-                    "</span>" +
-                    '<span class="history-time">' +
-                    formatTimestamp(img.timestamp) +
-                    "</span>" +
-                    "</div>"
-                )
-                .join("");
-            } else {
-              historyList.innerHTML =
-                '<div class="loading">Sin capturas guardadas</div>';
-            }
-          })
-          .catch((err) => {
-            const historyList = document.getElementById("historyList");
-            if (historyList) {
-              historyList.innerHTML =
-                '<div class="loading">Error cargando historial</div>';
-            }
-          });
-      }
-
-      function formatTimestamp(timestamp) {
-        const match = timestamp.match(
-          /(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/
-        );
-        if (match) {
-          return (
-            match[3] +
-            "/" +
-            match[2] +
-            "/" +
-            match[1] +
-            " " +
-            match[4] +
-            ":" +
-            match[5]
+        if (connected) {
+          statusEl.innerHTML = '<span class="status-online">Conectado</span>';
+          iconEl.textContent = "✅"; // Cambiar a check verde
+          statusEl.setAttribute(
+            "aria-label",
+            `ESP32-CAM conectado${ip ? ` - IP: ${ip}` : ""}`
           );
-        }
-        return timestamp;
-      }
-
-      // ====== ESTADÍSTICAS ======
-      async function loadStatistics() {
-        try {
-          console.log("📊 Cargando estadísticas...");
-          const response = await fetch("/api/statistics");
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          if (statusCard) {
+            statusCard.setAttribute("data-status", "online");
+            statusCard.style.borderColor = "var(--success)";
+            statusCard.style.boxShadow = "0 4px 12px rgba(45, 125, 50, 0.2)";
           }
-
-          const data = await response.json();
-          if (data.success && data.data) {
-            console.log(
-              "✓ Estadísticas cargadas:",
-              data.data.length,
-              "registros"
-            );
-            updateTrendsChart(data.data);
-          } else {
-            console.warn("⚠️ No hay datos de estadísticas disponibles");
-            // Mostrar gráfico vacío o mensaje
-            updateTrendsChart([]);
-          }
-        } catch (error) {
-          console.error("❌ Error cargando estadísticas:", error);
-          // En caso de error, mostrar datos mock o mensaje de error
-          updateTrendsChart([]);
-        }
-      }
-
-      function updateTrendsChart(statistics) {
-        const labels = [];
-        const detections = [];
-        const alerts = [];
-        const images = [];
-        let totalDet = 0,
-          totalAlr = 0,
-          totalImg = 0;
-
-        // Ordenar por fecha (más antiguo primero)
-        const sorted = statistics.sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
-        );
-
-        sorted.forEach((stat) => {
-          const date = new Date(stat.date);
-          labels.push(
-            date.toLocaleDateString("es-CO", { month: "short", day: "numeric" })
+          announceAlert(
+            `Dispositivo ESP32-CAM conectado${ip ? ` con IP ${ip}` : ""}`
           );
-          detections.push(stat.total_detections || 0);
-          alerts.push(stat.total_alerts || 0);
-          images.push(stat.images_captured || 0);
-          totalDet += stat.total_detections || 0;
-          totalAlr += stat.total_alerts || 0;
-          totalImg += stat.images_captured || 0;
-        });
-
-        // Actualizar totales con validación
-        const totalDetectionsEl = document.getElementById("totalDetections");
-        if (totalDetectionsEl) totalDetectionsEl.textContent = totalDet;
-
-        const totalAlertsEl = document.getElementById("totalAlerts");
-        if (totalAlertsEl) totalAlertsEl.textContent = totalAlr;
-
-        const totalImagesEl = document.getElementById("totalImages");
-        if (totalImagesEl) totalImagesEl.textContent = totalImg;
-
-        // Destruir gráfico anterior si existe
-        if (trendsChart) {
-          trendsChart.destroy();
-        }
-
-        // Crear nuevo gráfico
-        const ctx = document.getElementById("trendsChart");
-        if (!ctx) return;
-
-        trendsChart = new Chart(ctx, {
-          type: "line",
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: "Detecciones",
-                data: detections,
-                borderColor: "#008994",
-                backgroundColor: "rgba(0, 137, 148, 0.1)",
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointBackgroundColor: "#008994",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 2,
-              },
-              {
-                label: "Alertas",
-                data: alerts,
-                borderColor: "#d9a514",
-                backgroundColor: "rgba(217, 165, 20, 0.1)",
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointBackgroundColor: "#d9a514",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 2,
-              },
-              {
-                label: "Imágenes",
-                data: images,
-                borderColor: "#3baa18",
-                backgroundColor: "rgba(59, 170, 24, 0.1)",
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointBackgroundColor: "#3baa18",
-                pointBorderColor: "#fff",
-                pointBorderWidth: 2,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: "top",
-                labels: {
-                  font: { size: 12 },
-                  padding: 15,
-                  usePointStyle: true,
-                },
-              },
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { stepSize: 1 },
-                grid: { color: "rgba(0, 0, 0, 0.05)" },
-              },
-              x: {
-                grid: { display: false },
-              },
-            },
-          },
-        });
-      }
-
-      async function loadAlerts() {
-        try {
-          console.log("🚨 Cargando alertas...");
-          const response = await fetch("/api/alerts");
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          if (data.success && data.data) {
-            console.log("✓ Alertas cargadas:", data.data.length, "alertas");
-            updateAlertsTable(data.data);
-          } else {
-            console.warn("⚠️ No hay alertas disponibles");
-            updateAlertsTable([]);
-          }
-        } catch (error) {
-          console.error("❌ Error cargando alertas:", error);
-          const tbody = document.getElementById("alertsTableBody");
-          if (tbody) {
-            tbody.innerHTML =
-              '<tr><td colspan="5" style="text-align: center; color: var(--error);">Error cargando alertas: ' +
-              error.message +
-              "</td></tr>";
-          }
-        }
-      }
-
-      function updateAlertsTable(alerts) {
-        const tbody = document.getElementById("alertsTableBody");
-
-        if (!alerts || alerts.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="5" class="empty-state">No hay alertas registradas</td></tr>';
-          return;
-        }
-
-        const rows = alerts
-          .slice(0, 10)
-          .map((alert) => {
-            const severity = alert.severity
-              ? alert.severity.toLowerCase()
-              : "medium";
-            const status = alert.status ? alert.status.toLowerCase() : "active";
-            const duration = formatDuration(alert.duration_seconds);
-            const statusClass =
-              status === "active" ? "status-active" : "status-resolved";
-            const severityClass = `severity-${severity}`;
-
-            return `
-                    <tr>
-                        <td>${alert.alert_type || "UNKNOWN"}</td>
-                        <td><span class="severity-badge ${severityClass}">${
-              alert.severity || "MEDIUM"
-            }</span></td>
-                        <td><span class="status-badge ${statusClass}">${
-              alert.status || "UNKNOWN"
-            }</span></td>
-                        <td>${duration}</td>
-                        <td>${alert.images_count || 0}</td>
-                    </tr>
-                `;
-          })
-          .join("");
-
-        tbody.innerHTML = rows;
-      }
-
-      // ====== FUNCIONES DE CONTROL ======
-      function requestCapture() {
-        const btn = document.getElementById("captureBtn");
-        btn.disabled = true;
-        btn.textContent = "Capturando...";
-        socket.emit("requestCapture");
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.textContent = "Capturar Ahora";
-        }, 3000);
-      }
-
-      function refreshImage() {
-        if (currentImagePath) {
-          const path = currentImagePath.split("?")[0];
-          displayImage(path + "?t=" + Date.now());
         } else {
-          loadImageHistory();
-        }
-      }
-
-      function downloadImage() {
-        if (!currentImagePath) {
-          alert("No hay imagen para descargar");
-          return;
-        }
-        const filename = currentImagePath.split("/").pop().split("?")[0];
-        const link = document.createElement("a");
-        link.href = currentImagePath;
-        link.download = filename || "fire_capture.jpg";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      // ====== MANEJO DE TECLADO Y ACCESIBILIDAD ======
-      document.addEventListener("keydown", function (event) {
-        const alertOverlay = document.getElementById("alertOverlay");
-
-        // Cerrar modal con Escape
-        if (
-          event.key === "Escape" &&
-          alertOverlay.classList.contains("active")
-        ) {
-          acknowledgeAlert();
-        }
-
-        // Navegación por teclado en el modal
-        if (alertOverlay.classList.contains("active")) {
-          const focusableElements = alertOverlay.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-          );
-          const firstElement = focusableElements[0];
-          const lastElement = focusableElements[focusableElements.length - 1];
-
-          if (event.key === "Tab") {
-            if (event.shiftKey) {
-              if (document.activeElement === firstElement) {
-                event.preventDefault();
-                lastElement.focus();
-              }
-            } else {
-              if (document.activeElement === lastElement) {
-                event.preventDefault();
-                firstElement.focus();
-              }
-            }
+          statusEl.innerHTML =
+            '<span class="status-offline">Desconectado</span>';
+          iconEl.textContent = "❌"; // Cambiar a X roja
+          statusEl.setAttribute("aria-label", "ESP32-CAM desconectado");
+          if (statusCard) {
+            statusCard.setAttribute("data-status", "offline");
+            statusCard.style.borderColor = "var(--error)";
+            statusCard.style.boxShadow = "0 4px 12px rgba(198, 40, 40, 0.2)";
           }
+          announceAlert("Dispositivo ESP32-CAM desconectado");
         }
-      });
-
-      // Mejorar navegación por teclado en elementos interactivos
-      document.addEventListener("DOMContentLoaded", function () {
-        // Hacer los items del historial focusables
-        const historyItems = document.querySelectorAll(".history-item");
-        historyItems.forEach((item) => {
-          item.setAttribute("tabindex", "0");
-          item.setAttribute("role", "button");
-
-          item.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              item.click();
-            }
-          });
-        });
-      });
-
-      // ====== INICIALIZACIÓN ======
-      setTimeout(loadImageHistory, 1000);
-      setTimeout(loadStatistics, 1000);
-      setTimeout(loadAlerts, 1000);
-
-      setInterval(() => {
-        if (socket.connected) {
-          loadStatistics();
-          loadAlerts();
-        }
-      }, 60000); // Actualizar cada minuto
-
-      // Configuración inicial de accesibilidad
-      document
-        .getElementById("alertOverlay")
-        .setAttribute("aria-hidden", "true");
+      }
     </script>
   </body>
 </html>
