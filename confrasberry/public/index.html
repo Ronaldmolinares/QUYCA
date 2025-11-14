@@ -343,205 +343,183 @@
         line-height: 1.4;
       }
 
-      /* ====== BOTONES DE ALERTA MEJORADOS ====== */
-      .alert-close-button {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        color: #ffffff;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 18px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        z-index: 10;
-      }
-
-      .alert-close-button:hover,
-      .alert-close-button:focus {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: #ffffff;
-        transform: scale(1.1);
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
-      }
-
       .alert-actions {
         display: flex;
         gap: 20px;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 30px;
       }
 
-      /* Estilos base para todos los botones de alerta */
       .alert-button {
-        min-width: 180px;
-        padding: 16px 24px;
-        border: 3px solid transparent;
-        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid #ffffff;
+        color: #ffffff;
+        padding: 15px 30px;
+        border-radius: 50px;
         cursor: pointer;
-        font-size: 16px;
-        font-weight: 700;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
         text-transform: uppercase;
         letter-spacing: 1px;
-        transition: all 0.3s ease;
-        display: inline-flex;
+      }
+
+      .alert-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .alert-button.primary {
+        background: #ffffff;
+        color: var(--error);
+      }
+
+      .alert-button.primary:hover {
+        background: #f0f0f0;
+      }
+
+      /* Banner de alerta sticky superior */
+      .alert-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, var(--error) 0%, #a02828 100%);
+        color: var(--error-foreground);
+        padding: 15px 20px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: bold;
+        z-index: 1000;
+        display: none;
+        animation: slideDown 0.5s ease-out, alertPulse 2s ease-in-out infinite;
+        box-shadow: 0 4px 20px rgba(197, 48, 48, 0.5);
+        border-bottom: 3px solid #ffffff;
+      }
+
+      .alert-banner.active {
+        display: block;
+      }
+
+      .alert-banner-content {
+        display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        position: relative;
-        overflow: hidden;
-        text-decoration: none;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        gap: 15px;
+        max-width: 1200px;
+        margin: 0 auto;
       }
 
-      /* Botón primario (Capturar) */
-      .alert-button-primary {
-        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
-        color: var(--error);
-        border-color: #ffffff;
+      .alert-banner-icon {
+        font-size: 1.5rem;
+        animation: rotate 2s linear infinite;
       }
 
-      .alert-button-primary:hover,
-      .alert-button-primary:focus {
-        background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        border-color: #e0e0e0;
+      .alert-banner-text {
+        flex: 1;
+        font-weight: 800;
+        letter-spacing: 1px;
       }
 
-      /* Botón de éxito (Resolver) */
-      .alert-button-success {
-        background: linear-gradient(135deg, var(--success) 0%, #1b5e20 100%);
-        color: var(--success-foreground);
-        border-color: var(--success);
+      .alert-banner-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid #ffffff;
+        color: #ffffff;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
       }
 
-      .alert-button-success:hover,
-      .alert-button-success:focus {
-        background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(45, 125, 50, 0.4);
-        border-color: #1b5e20;
+      .alert-banner-close:hover {
+        background: rgba(255, 255, 255, 0.3);
       }
 
-      /* Estados de foco mejorados */
-      .alert-button:focus {
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5), 0 8px 25px rgba(0, 0, 0, 0.3);
+      /* Ajustar el contenido cuando hay banner activo */
+      body.alert-active {
+        padding-top: 70px;
       }
 
-      /* Estado activo */
-      .alert-button:active {
-        transform: translateY(-1px);
-        transition-duration: 0.1s;
+      body.alert-active .container {
+        margin-top: 20px;
       }
 
-      /* Estado deshabilitado */
-      .alert-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        background: #cccccc;
-        color: #666666;
-        border-color: #cccccc;
-      }
-
-      .alert-button:disabled:hover {
-        transform: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      /* Animación de carga para botones */
-      .alert-button.loading {
-        position: relative;
-        color: transparent;
-        pointer-events: none;
-      }
-
-      .alert-button.loading::after {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border: 2px solid transparent;
-        border-top-color: currentColor;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: var(--error);
-      }
-
-      /* Responsive para botones */
-      @media (max-width: 768px) {
-        .alert-actions {
-          flex-direction: column;
-          gap: 15px;
+      /* Animaciones mejoradas */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
-
-        .alert-button {
-          width: 100%;
-          min-width: auto;
-          padding: 18px 24px;
-          font-size: 14px;
-        }
-
-        .alert-close-button {
-          width: 36px;
-          height: 36px;
-          font-size: 16px;
-          top: 10px;
-          right: 10px;
-        }
-      }
-
-      /* Mejoras adicionales para accesibilidad */
-      @media (prefers-reduced-motion: reduce) {
-        .alert-button,
-        .alert-close-button {
-          transition: none;
-        }
-
-        .alert-button:hover,
-        .alert-button:focus {
-          transform: none;
-        }
-      }
-
-      /* Alto contraste */
-      @media (prefers-contrast: high) {
-        .alert-button {
-          border-width: 4px;
-          font-weight: 800;
-        }
-
-        .alert-button-primary {
-          background: #ffffff;
-          color: #000000;
-          border-color: #000000;
-        }
-
-        .alert-button-success {
-          background: #008000;
-          color: #ffffff;
-          border-color: #004000;
-        }
-      }
-
-      /* Animación de rotación */
-      @keyframes spin {
         to {
-          transform: translate(-50%, -50%) rotate(360deg);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes alertPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(197, 48, 48, 0.7);
+          transform: scale(1);
+        }
+        70% {
+          box-shadow: 0 0 0 20px rgba(197, 48, 48, 0);
+          transform: scale(1.02);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(197, 48, 48, 0);
+          transform: scale(1);
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+          transform: translateX(-3px);
+        }
+        20%,
+        40%,
+        60%,
+        80% {
+          transform: translateX(3px);
+        }
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
         }
       }
 
@@ -930,7 +908,7 @@
             onclick="dismissBanner()"
             aria-label="Cerrar alerta"
           >
-            CERRAR
+            DETENER ALERTA
           </button>
         </div>
       </div>
@@ -943,46 +921,36 @@
         aria-modal="true"
         aria-labelledby="alertTitle"
       >
-                <div class="alert-modal">
-                  <button
-                      class="alert-close-button"
-                      onclick="acknowledgeAlert()"
-                      aria-label="Cerrar modal de alerta"
-                      title="Cerrar modal"
-                    >
-                      ✕
-                    </button>
-                  <div
-                    class="alert-icon"
-                    role="img"
-                    aria-label="Icono de alerta de incendio"
-                  >
-                    🔥
-                  </div>
-                  <h1 class="alert-title" id="alertTitle">¡ALERTA DE INCENDIO!</h1>
-                  <p class="alert-message">
-                    Se ha detectado fuego en el área monitoreada. Tome las medidas
-                    necesarias inmediatamente.
-                  </p>
-                  <div id="alertImageContainer" style="margin: 20px 0"></div>
-                  <div class="alert-actions">
-                    <button
-                      onclick="requestCapture()"
-                      id="captureBtn"
-                      class="alert-button alert-button-primary"
-                      aria-describedby="alertTitle"
-                    >
-                      📷 CAPTURAR AHORA
-                    </button>
-                    <button 
-                      onclick="resolveAlert()" 
-                      class="alert-button alert-button-success"
-                      aria-describedby="alertTitle"
-                    >
-                      ✅ RESOLVER ALERTA
-                    </button>
-                  </div>
-                </div>
+        <div class="alert-modal">
+          <div
+            class="alert-icon"
+            role="img"
+            aria-label="Icono de alerta de incendio"
+          >
+            🔥
+          </div>
+          <h1 class="alert-title" id="alertTitle">¡ALERTA DE INCENDIO!</h1>
+          <p class="alert-message">
+            Se ha detectado fuego en el área monitoreada. Tome las medidas
+            necesarias inmediatamente.
+          </p>
+          <div id="alertImageContainer" style="margin: 20px 0"></div>
+          <div class="alert-actions">
+            <button
+              class="alert-button primary"
+              onclick="resolveAlert()"
+              aria-describedby="alertTitle"
+            >
+              RESOLVER ALERTA
+            </button>
+            <button
+              class="alert-button"
+              onclick="acknowledgeAlert()"
+              aria-describedby="alertTitle"
+            >
+              X
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1003,7 +971,7 @@
             <button onclick="downloadImage()" id="downloadBtn" disabled>
               Descargar
             </button>
-            <button
+            <!-- <button
               onclick="stopAlert()"
               id="stopAlertBtn"
               style="
@@ -1012,7 +980,7 @@
               "
             >
               Detener Alerta
-            </button>
+            </button> -->
           </div>
         </div>
 
@@ -1469,12 +1437,6 @@
 
       // Función mejorada para resolver alertas que es compatible con server.js
       function resolveAlert() {
-        const resolveBtn = document.querySelector('.alert-button-success');
-        if (resolveBtn) {
-          resolveBtn.classList.add("loading");
-          resolveBtn.disabled = true;
-        }
-
         const alertBannerEl = document.getElementById("alertBanner");
         const alertOverlayEl = document.getElementById("alertOverlay");
         const body = document.body;
@@ -1491,21 +1453,13 @@
         // Detener sonido
         stopAlert();
 
-        // Emitir evento al servidor
+        // Emitir evento al servidor (como espera server.js)
         socket.emit("resolveAlert");
 
         // Anuncio para accesibilidad
         announceAlert("Alerta resuelta exitosamente");
 
         console.log("🔧 Alerta resuelta desde interfaz web");
-
-        // Quitar estado de carga después de un momento
-        setTimeout(() => {
-          if (resolveBtn) {
-            resolveBtn.classList.remove("loading");
-            resolveBtn.disabled = false;
-          }
-        }, 1000);
       }
 
       function updateDetectionCount(count) {
@@ -1811,19 +1765,12 @@
       // ====== FUNCIONES DE CONTROL ======
       function requestCapture() {
         const btn = document.getElementById("captureBtn");
-        if (!btn) return;
-        
-        // Agregar estado de carga
-        btn.classList.add("loading");
         btn.disabled = true;
-        btn.setAttribute("aria-busy", "true");
-        
+        btn.textContent = "Capturando...";
         socket.emit("requestCapture");
-        
         setTimeout(() => {
-          btn.classList.remove("loading");
           btn.disabled = false;
-          btn.removeAttribute("aria-busy");
+          btn.textContent = "Capturar Ahora";
         }, 3000);
       }
 
@@ -1902,8 +1849,6 @@
           });
         });
       });
-
-
 
       // ====== INICIALIZACIÓN ======
       setTimeout(loadImageHistory, 1000);
