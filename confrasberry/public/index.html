@@ -1,1002 +1,1859 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QUYCA</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
+      :root {
+        /* Improved color tokens for QUYCA fire monitoring dashboard - Enhanced accessibility */
+        --background: #ffffff; /* Pure white background */
+        --foreground: #1a1a1a; /* Dark text for high contrast (AAA) */
+        --card: #f9f9f9; /* Light gray for card backgrounds */
+        --card-foreground: #1a1a1a; /* Dark gray for card text */
+        --popover: #ffffff; /* White for popover backgrounds */
+        --popover-foreground: #1a1a1a; /* Dark gray for popover text */
+        --primary: #006875; /* Darker cyan for better contrast */
+        --primary-foreground: #ffffff; /* White text on primary buttons */
+        --secondary: #e53e3e; /* Red for critical alerts - improved contrast */
+        --secondary-foreground: #ffffff; /* White text on secondary elements */
+        --muted: #f5f5f5; /* Light gray for muted backgrounds */
+        --muted-foreground: #4a4a4a; /* Darker gray for better readability */
+        --accent: #d69e2e; /* Orange for warnings - better contrast */
+        --accent-foreground: #1a1a1a; /* Dark text on accent elements */
+        --destructive: #c53030; /* Dark red for critical alerts */
+        --destructive-foreground: #ffffff; /* White for text on destructive elements */
+        --border: #e2e2e2; /* Medium gray for borders */
+        --input: #ffffff; /* White input fields background */
+        --ring: #006875; /* Cyan for focus rings */
+        --chart-1: #2d7d32; /* Darker green for charts */
+        --chart-2: #f57c00; /* Orange for medium risk */
+        --chart-3: #c62828; /* Dark red for high risk */
+        --chart-4: #1976d2; /* Blue for informational elements */
+        --chart-5: #7b1fa2; /* Purple for secondary actions */
+        --radius: 0.5rem; /* Rounded corners for cards and buttons */
+
+        /* New accessibility colors */
+        --success: #2d7d32;
+        --success-foreground: #ffffff;
+        --warning: #f57c00;
+        --warning-foreground: #ffffff;
+        --error: #c62828;
+        --error-foreground: #ffffff;
+        --info: #1976d2;
+        --info-foreground: #ffffff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+          "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+          "Helvetica Neue", sans-serif;
+        background: linear-gradient(
+          135deg,
+          var(--background) 0%,
+          var(--muted) 100%
+        );
+        color: var(--foreground);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header-top {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 40px;
+      }
+
+      .logo-container {
+        flex-shrink: 0;
+      }
+
+      .logo-container img {
+        height: 100px;
+        width: auto;
+        object-fit: contain;
+      }
+
+      .subtitle {
+        font-size: 1.1em;
+        padding-right: 150px;
+        padding-left: 60px;
+        color: var(--muted-foreground);
+        font-weight: 300;
+        line-height: 1.4;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-around;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      .status-card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        flex: 1;
+        min-width: 200px;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      .status-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary);
+      }
+
+      .status-icon {
+        font-size: 3em;
+        margin-bottom: 10px;
+      }
+
+      .status-label {
+        font-size: 0.9em;
+        color: var(--muted-foreground);
+        margin-bottom: 5px;
+        font-weight: 600;
+      }
+
+      .status-value {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: var(--foreground);
+      }
+
+      /* Estados mejorados con mejor accesibilidad */
+      .status-online {
+        color: var(--success);
+        background: rgba(45, 125, 50, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .status-offline {
+        color: var(--error);
+        background: rgba(198, 40, 40, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .status-alert {
+        color: var(--error);
+        background: rgba(198, 40, 40, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        animation: alertPulse 2s ease-in-out infinite;
+      }
+      .status-safe {
+        color: var(--success);
+        background: rgba(45, 125, 50, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 1024px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: var(--radius);
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+      }
+
+      .card h2 {
+        margin-bottom: 15px;
+        font-size: 1.5em;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .image-container {
+        position: relative;
+        background: var(--muted);
+        border-radius: calc(var(--radius) - 2px);
+        overflow: hidden;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--border);
+      }
+
+      .image-container img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .no-image {
+        text-align: center;
+        opacity: 0.5;
+        color: var(--muted-foreground);
+      }
+
+      .no-image-icon {
+        font-size: 4em;
+        margin-bottom: 10px;
+      }
+
+      .image-overlay {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        background: linear-gradient(135deg, var(--primary) 0%, #006d78 100%);
+        border: none;
+        color: var(--primary-foreground);
+        padding: 12px 24px;
+        border-radius: calc(var(--radius) - 2px);
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: bold;
+        transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 137, 148, 0.3);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 137, 148, 0.4);
+        background: linear-gradient(135deg, #006d78 0%, #005058 100%);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: var(--muted);
+        color: var(--muted-foreground);
+        box-shadow: none;
+      }
+
+      /* ====== SISTEMA DE ALERTAS MEJORADO ====== */
+      .alert-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .alert-overlay.active {
+        display: flex;
+      }
+
+      .alert-modal {
+        background: var(--error);
+        color: var(--error-foreground);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border: 3px solid #ffffff;
+        animation: alertPulse 1s ease-in-out infinite alternate,
+          slideIn 0.5s ease-out;
+      }
+
+      .alert-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        animation: shake 0.8s ease-in-out infinite;
+      }
+
+      .alert-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .alert-message {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        line-height: 1.4;
+      }
+
+      .alert-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .alert-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid #ffffff;
+        color: #ffffff;
+        padding: 15px 30px;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .alert-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .alert-button.primary {
+        background: #ffffff;
+        color: var(--error);
+      }
+
+      .alert-button.primary:hover {
+        background: #f0f0f0;
+      }
+
+      /* Banner de alerta sticky superior */
+      .alert-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, var(--error) 0%, #a02828 100%);
+        color: var(--error-foreground);
+        padding: 15px 20px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: bold;
+        z-index: 1000;
+        display: none;
+        animation: slideDown 0.5s ease-out, alertPulse 2s ease-in-out infinite;
+        box-shadow: 0 4px 20px rgba(197, 48, 48, 0.5);
+        border-bottom: 3px solid #ffffff;
+      }
+
+      .alert-banner.active {
+        display: block;
+      }
+
+      .alert-banner-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .alert-banner-icon {
+        font-size: 1.5rem;
+        animation: rotate 2s linear infinite;
+      }
+
+      .alert-banner-text {
+        flex: 1;
+        font-weight: 800;
+        letter-spacing: 1px;
+      }
+
+      .alert-banner-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid #ffffff;
+        color: #ffffff;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .alert-banner-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Ajustar el contenido cuando hay banner activo */
+      body.alert-active {
+        padding-top: 70px;
+      }
+
+      body.alert-active .container {
+        margin-top: 20px;
+      }
+
+      /* Animaciones mejoradas */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-50px) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes alertPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(197, 48, 48, 0.7);
+          transform: scale(1);
+        }
+        70% {
+          box-shadow: 0 0 0 20px rgba(197, 48, 48, 0);
+          transform: scale(1.02);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(197, 48, 48, 0);
+          transform: scale(1);
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+          transform: translateX(-3px);
+        }
+        20%,
+        40%,
+        60%,
+        80% {
+          transform: translateX(3px);
+        }
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ====== ACCESIBILIDAD ====== */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Mejorar el foco para teclado */
+      button:focus,
+      .alert-button:focus,
+      .alert-banner-close:focus {
+        outline: 3px solid var(--ring);
+        outline-offset: 2px;
+      }
+
+      /* Estados de hover mejorados para accesibilidad */
+      .status-card:focus-within {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        border-color: var(--primary);
+        outline: 2px solid var(--ring);
+      }
+
+      .history-item:focus {
+        background: var(--card);
+        border-left-color: var(--primary);
+        border: 2px solid var(--primary);
+        outline: none;
+      }
+
+      /* Mejorar contraste en modo de alto contraste */
+      @media (prefers-contrast: high) {
         :root {
-            /* Updated color tokens for QUYCA fire monitoring dashboard */
-            --background: oklch(1 0 0); /* White background for readability */
-            --foreground: oklch(0.35 0 0); /* Dark gray for primary text */
-            --card: #f8f8f8; /* Light gray for card backgrounds */
-            --card-foreground: oklch(0.35 0 0); /* Dark gray for card text */
-            --popover: oklch(1 0 0); /* White for popover backgrounds */
-            --popover-foreground: oklch(0.35 0 0); /* Dark gray for popover text */
-            --primary: #008994; /* Cyan for buttons and highlights */
-            --primary-foreground: oklch(1 0 0); /* White text on primary buttons */
-            --secondary: #f0532a; /* Orange for alerts */
-            --secondary-foreground: oklch(1 0 0); /* White text on secondary elements */
-            --muted: oklch(0.98 0 0); /* Light gray for muted backgrounds */
-            --muted-foreground: oklch(0.5 0 0); /* Medium gray for muted text */
-            --accent: oklch(0.6 0.25 35); /* Orange for risk indicators */
-            --accent-foreground: oklch(1 0 0); /* White for text on accent elements */
-            --destructive: oklch(0.55 0.25 25); /* Red for critical alerts */
-            --destructive-foreground: oklch(1 0 0); /* White for text on destructive elements */
-            --border: oklch(0.9 0 0); /* Light gray for borders */
-            --input: oklch(0.98 0 0); /* Input fields background */
-            --ring: #008994; /* Cyan for focus rings */
-            --chart-1: #3baa18; /* Green for normal risk */
-            --chart-2: #d9a514; /* Yellow for risk */
-            --chart-3: oklch(0.55 0.25 25); /* Red for critical risk */
-            --chart-4: oklch(0.55 0.15 200); /* Cyan for informational elements */
-            --chart-5: oklch(0.6 0.2 260); /* Purple for secondary actions */
-            --radius: 0.5rem; /* Rounded corners for cards and buttons */
+          --foreground: #000000;
+          --background: #ffffff;
+          --border: #000000;
+          --primary: #000080;
+          --error: #800000;
+          --success: #008000;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .status-card,
+        .card {
+          border-width: 3px;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, var(--background) 0%, var(--muted) 100%);
-            color: var(--foreground);
-            min-height: 100vh;
-            padding: 20px;
+
+        button {
+          border: 2px solid #000000;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+      }
+
+      /* Reducir movimiento si el usuario lo prefiere */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
         }
-        
+
+        .alert-overlay {
+          animation: none;
+        }
+
+        .alert-modal {
+          animation: none;
+        }
+      }
+
+      /* Estilos responsivos mejorados */
+      @media (max-width: 768px) {
         .header-top {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 40px;
-        }
-
-        .logo-container {
-            flex-shrink: 0;
-        }
-
-        .logo-container img {
-            height: 100px;
-            width: auto;
-            object-fit: contain;
+          flex-direction: column;
+          text-align: center;
         }
 
         .subtitle {
-            font-size: 1.1em;
-            padding-right: 150px;
-            padding-left: 60px;
-            color: var(--muted-foreground);
-            font-weight: 300;
-            line-height: 1.4;
-        }
-        
-        .status-bar {
-            display: flex;
-            justify-content: space-around;
-            gap: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .status-card {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            flex: 1;
-            min-width: 200px;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        
-        .status-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-            border-color: var(--primary);
-        }
-        
-        .status-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-        
-        .status-label {
-            font-size: 0.9em;
-            color: var(--muted-foreground);
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-        
-        .status-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: var(--foreground);
-        }
-        
-        .status-online { color: var(--chart-1); }
-        .status-offline { color: var(--destructive); }
-        .status-alert { color: var(--destructive); }
-        .status-safe { color: var(--chart-1); }
-        
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .card {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: box-shadow 0.3s;
-            display: flex;
-            flex-direction: column;
+          padding: 10px 0;
         }
 
-        .card:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-        }
-        
-        .card h2 {
-            margin-bottom: 15px;
-            font-size: 1.5em;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .image-container {
-            position: relative;
-            background: var(--muted);
-            border-radius: calc(var(--radius) - 2px);
-            overflow: hidden;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid var(--border);
-        }
-        
-        .image-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .no-image {
-            text-align: center;
-            opacity: 0.5;
-            color: var(--muted-foreground);
-        }
-        
-        .no-image-icon {
-            font-size: 4em;
-            margin-bottom: 10px;
-        }
-        
-        .image-overlay {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        
-        button {
-            background: linear-gradient(135deg, var(--primary) 0%, #006d78 100%);
-            border: none;
-            color: var(--primary-foreground);
-            padding: 12px 24px;
-            border-radius: calc(var(--radius) - 2px);
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
-            box-shadow: 0 4px 6px rgba(0, 137, 148, 0.3);
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 137, 148, 0.4);
-            background: linear-gradient(135deg, #006d78 0%, #005058 100%);
-        }
-        
-        button:active {
-            transform: translateY(0);
+        .alert-modal {
+          padding: 30px 20px;
+          margin: 20px;
         }
 
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background: var(--muted);
-            color: var(--muted-foreground);
-            box-shadow: none;
-        }
-        
-        .alert-banner {
-            background: linear-gradient(90deg, var(--secondary), #c83d1f);
-            color: white;
-            padding: 20px;
-            border-radius: calc(var(--radius) - 2px);
-            text-align: center;
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            display: none;
-            animation: pulse 1s infinite;
-            box-shadow: 0 6px 20px rgba(240, 83, 42, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .alert-banner.active {
-            display: block;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        
-        .history-list {
-            max-height: 400px;
-            overflow-y: auto;
-            flex: 1;
+        .alert-title {
+          font-size: 1.5rem;
         }
 
-        .history-list::-webkit-scrollbar {
-            width: 8px;
+        .alert-actions {
+          flex-direction: column;
         }
 
-        .history-list::-webkit-scrollbar-track {
-            background: var(--muted);
-            border-radius: calc(var(--radius) - 2px);
+        .alert-button {
+          width: 100%;
         }
+      }
 
-        .history-list::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: calc(var(--radius) - 2px);
-        }
+      .history-list {
+        max-height: 400px;
+        overflow-y: auto;
+        flex: 1;
+      }
 
-        .history-list::-webkit-scrollbar-thumb:hover {
-            background: #006d78;
-        }
-        
-        .history-item {
-            background: var(--muted);
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: calc(var(--radius) - 2px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s, border 0.2s;
-            border-left: 4px solid transparent;
-            cursor: pointer;
-            border: 1px solid var(--border);
-        }
-        
-        .history-item:hover {
-            background: var(--card);
-            border-left-color: var(--primary);
-            border: 1px solid var(--primary);
-        }
-        
-        .history-time {
-            font-size: 0.9em;
-            color: var(--muted-foreground);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--muted-foreground);
-        }
-        
-        .connection-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--card);
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            border: 2px solid var(--border);
-            color: var(--foreground);
-        }
+      .history-list::-webkit-scrollbar {
+        width: 8px;
+      }
 
-        /* ====== ESTADÍSTICAS ====== */
+      .history-list::-webkit-scrollbar-track {
+        background: var(--muted);
+        border-radius: calc(var(--radius) - 2px);
+      }
 
-        .statistics-section {
-            margin-top: 40px;
-        }
+      .history-list::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: calc(var(--radius) - 2px);
+      }
 
+      .history-list::-webkit-scrollbar-thumb:hover {
+        background: #006d78;
+      }
+
+      .history-item {
+        background: var(--muted);
+        padding: 12px;
+        margin-bottom: 10px;
+        border-radius: calc(var(--radius) - 2px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s, border 0.2s;
+        border-left: 4px solid transparent;
+        cursor: pointer;
+        border: 1px solid var(--border);
+      }
+
+      .history-item:hover {
+        background: var(--card);
+        border-left-color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+
+      .history-time {
+        font-size: 0.9em;
+        color: var(--muted-foreground);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: var(--muted-foreground);
+      }
+
+      .connection-indicator {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--card);
+        padding: 12px 20px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 2px solid var(--border);
+        color: var(--foreground);
+      }
+
+      /* ====== ESTADÍSTICAS ====== */
+
+      .statistics-section {
+        margin-top: 40px;
+      }
+
+      .statistics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 1024px) {
         .statistics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+          grid-template-columns: 1fr;
         }
+      }
 
-        @media (max-width: 1024px) {
-            .statistics-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      .statistics-card {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: var(--radius);
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
 
-        .statistics-card {
-            background: var(--card);
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
+      .statistics-card h3 {
+        color: var(--primary);
+        font-size: 1.2em;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
 
-        .statistics-card h3 {
-            color: var(--primary);
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
+      .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+      }
 
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-bottom: 20px;
-        }
+      /* Tabla de alertas */
+      .alerts-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
 
-        /* Tabla de alertas */
-        .alerts-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
+      .alerts-table thead {
+        background: var(--muted);
+        border-bottom: 2px solid var(--border);
+      }
 
-        .alerts-table thead {
-            background: var(--muted);
-            border-bottom: 2px solid var(--border);
-        }
+      .alerts-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 0.9em;
+      }
 
-        .alerts-table th {
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 0.9em;
-        }
+      .alerts-table td {
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.95em;
+      }
 
-        .alerts-table td {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95em;
-        }
+      .alerts-table tbody tr:hover {
+        background: rgba(0, 137, 148, 0.05);
+      }
 
-        .alerts-table tbody tr:hover {
-            background: rgba(0, 137, 148, 0.05);
-        }
+      .severity-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 2px solid transparent;
+      }
 
-        .severity-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
+      .severity-low {
+        background: var(--success);
+        color: var(--success-foreground);
+        border-color: #1b5e20;
+      }
 
-        .severity-low {
-            background: rgba(59, 170, 24, 0.2);
-            color: #3baa18;
-        }
+      .severity-medium {
+        background: var(--warning);
+        color: var(--warning-foreground);
+        border-color: #e65100;
+      }
 
-        .severity-medium {
-            background: rgba(232, 217, 83, 0.2);
-            color: #9a7d1e;
-        }
+      .severity-high {
+        background: var(--error);
+        color: var(--error-foreground);
+        border-color: #b71c1c;
+      }
 
-        .severity-high {
-            background: rgba(240, 83, 42, 0.2);
-            color: #c83d1f;
-        }
+      .severity-critical {
+        background: #8b0000;
+        color: #ffffff;
+        border-color: #660000;
+        animation: criticalPulse 1.5s ease-in-out infinite;
+      }
 
-        .severity-critical {
-            background: rgba(139, 56, 56, 0.3);
-            color: #6b2a2a;
-        }
+      .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: 2px solid transparent;
+      }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
+      .status-active {
+        background: var(--error);
+        color: var(--error-foreground);
+        border-color: #b71c1c;
+        animation: activePulse 2s ease-in-out infinite;
+      }
 
-        .status-active {
-            background: rgba(59, 170, 24, 0.2);
-            color: #3baa18;
-        }
+      .status-resolved {
+        background: var(--success);
+        color: var(--success-foreground);
+        border-color: #1b5e20;
+      }
 
-        .status-resolved {
-            background: rgba(0, 137, 148, 0.2);
-            color: var(--primary);
+      @keyframes criticalPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(139, 0, 0, 0.7);
+          transform: scale(1);
         }
+        50% {
+          box-shadow: 0 0 0 8px rgba(139, 0, 0, 0);
+          transform: scale(1.05);
+        }
+      }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--muted-foreground);
-            font-style: italic;
+      @keyframes activePulse {
+        0%,
+        100% {
+          opacity: 1;
         }
+        50% {
+          opacity: 0.7;
+        }
+      }
 
-        .trend-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-        }
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--muted-foreground);
+        font-style: italic;
+      }
 
-        .trend-stat:last-child {
-            border-bottom: none;
-        }
+      .trend-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
 
-        .trend-label {
-            color: var(--muted-foreground);
-            font-size: 0.9em;
-        }
+      .trend-stat:last-child {
+        border-bottom: none;
+      }
 
-        .trend-value {
-            font-weight: bold;
-            color: var(--primary);
-            font-size: 1.1em;
-        }
+      .trend-label {
+        color: var(--muted-foreground);
+        font-size: 0.9em;
+      }
+
+      .trend-value {
+        font-weight: bold;
+        color: var(--primary);
+        font-size: 1.1em;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header-top">
-            <div class="logo-container">
-                <img src="images/quycaLogo.png" alt="QUYCA Logo">
+      <div class="header-top">
+        <div class="logo-container">
+          <img src="images/quycaLogo.png" alt="QUYCA Logo" />
+        </div>
+        <p class="subtitle">
+          Sistema de monitoreo en tiempo real para prevención de incendios
+        </p>
+        <div class="status-card">
+          <div class="status-icon" id="deviceIcon">📡</div>
+          <div class="status-label">ESP32-CAM</div>
+          <div class="status-value" id="deviceStatus">Conectando...</div>
+        </div>
+      </div>
+
+      <!-- Sistema de alertas mejorado -->
+      <div class="alert-banner" id="alertBanner">
+        <div class="alert-banner-content">
+          <span class="alert-banner-icon">🚨</span>
+          <span class="alert-banner-text"
+            >ALERTA DE INCENDIO ACTIVA - VERIFICAR ÁREA INMEDIATAMENTE</span
+          >
+          <button
+            class="alert-banner-close"
+            onclick="dismissBanner()"
+            aria-label="Cerrar alerta"
+          >
+            CERRAR
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal de alerta de pantalla completa -->
+      <div
+        class="alert-overlay"
+        id="alertOverlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="alertTitle"
+      >
+        <div class="alert-modal">
+          <div
+            class="alert-icon"
+            role="img"
+            aria-label="Icono de alerta de incendio"
+          >
+            🔥
+          </div>
+          <h1 class="alert-title" id="alertTitle">¡ALERTA DE INCENDIO!</h1>
+          <p class="alert-message">
+            Se ha detectado fuego en el área monitoreada. Tome las medidas
+            necesarias inmediatamente.
+          </p>
+          <div class="alert-actions">
+            <button
+              class="alert-button primary"
+              onclick="resolveAlert()"
+              aria-describedby="alertTitle"
+            >
+              RESOLVER ALERTA
+            </button>
+            <button
+              class="alert-button"
+              onclick="acknowledgeAlert()"
+              aria-describedby="alertTitle"
+            >
+              SOLO CERRAR MODAL
+            </button>
+            <button
+              class="alert-button"
+              onclick="stopAlert()"
+              aria-describedby="alertTitle"
+            >
+              DETENER SONIDO
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-grid">
+        <div class="card">
+          <h2>Última Captura</h2>
+          <div class="image-container" id="imageContainer">
+            <div class="no-image">
+              <div class="no-image-icon">📷</div>
+              <p>Esperando primera captura...</p>
             </div>
-            <p class="subtitle">Sistema de monitoreo en tiempo real para prevención de incendios</p>
+          </div>
+          <div class="controls">
+            <button onclick="requestCapture()" id="captureBtn">
+              Capturar Ahora
+            </button>
+            <button onclick="refreshImage()">Actualizar</button>
+            <button onclick="downloadImage()" id="downloadBtn" disabled>
+              Descargar
+            </button>
+            <button
+              onclick="stopAlert()"
+              id="stopAlertBtn"
+              style="
+                display: none;
+                background: linear-gradient(135deg, #f0532a 0%, #c83d1f 100%);
+              "
+            >
+              Detener Alerta
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <div>
             <div class="status-card">
-                <div class="status-icon" id="deviceIcon">📡</div>
-                <div class="status-label">ESP32-CAM</div>
-                <div class="status-value" id="deviceStatus">Conectando...</div>
+              <div class="status-icon">⏱️</div>
+              <div class="status-label">Última Alerta</div>
+              <div class="status-value" id="lastAlertTime">--</div>
             </div>
+          </div>
+          <div class="card" style="flex: 1">
+            <h2>Historial de Capturas</h2>
+            <div class="history-list" id="historyList">
+              <div class="loading">Cargando historial...</div>
+            </div>
+          </div>
         </div>
-        
-        <div class="alert-banner" id="alertBanner">
-            FUEGO DETECTADO - VERIFICAR ÁREA INMEDIATAMENTE
-        </div>
-        
+      </div>
 
-        
-        <div class="main-grid">
-            <div class="card">
-                <h2>Última Captura</h2>
-                <div class="image-container" id="imageContainer">
-                    <div class="no-image">
-                        <div class="no-image-icon">📷</div>
-                        <p>Esperando primera captura...</p>
-                    </div>
-                </div>
-                <div class="controls">
-                    <button onclick="requestCapture()" id="captureBtn">Capturar Ahora</button>
-                    <button onclick="refreshImage()">Actualizar</button>
-                    <button onclick="downloadImage()" id="downloadBtn" disabled>Descargar</button>
-                    <button onclick="stopAlert()" id="stopAlertBtn" style="display:none; background: linear-gradient(135deg, #f0532a 0%, #c83d1f 100%);">Detener Alerta</button>
-                </div>
+      <!-- ====== SECCIÓN DE ESTADÍSTICAS ====== -->
+      <div class="statistics-section">
+        <div class="statistics-grid">
+          <!-- GRÁFICO DE TENDENCIAS (7 DÍAS) -->
+          <div class="statistics-card">
+            <h3>Tendencia Últimos 7 Días</h3>
+            <div class="chart-container">
+              <canvas id="trendsChart"></canvas>
             </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div>
-                    <div class="status-card">
-                        <div class="status-icon">⏱️</div>
-                        <div class="status-label">Última Alerta</div>
-                        <div class="status-value" id="lastAlertTime">--</div>
-                    </div>
-                </div>
-                <div class="card" style="flex: 1;">
-                    <h2>Historial de Capturas</h2>
-                    <div class="history-list" id="historyList">
-                        <div class="loading">Cargando historial...</div>
-                    </div>
-                </div>
+            <div id="trendStats">
+              <div class="trend-stat">
+                <span class="trend-label">Detecciones totales:</span>
+                <span class="trend-value" id="totalDetections">0</span>
+              </div>
+              <div class="trend-stat">
+                <span class="trend-label">Alertas totales:</span>
+                <span class="trend-value" id="totalAlerts">0</span>
+              </div>
+              <div class="trend-stat">
+                <span class="trend-label">Imágenes capturadas:</span>
+                <span class="trend-value" id="totalImages">0</span>
+              </div>
             </div>
-        </div>
+          </div>
 
-        <!-- ====== SECCIÓN DE ESTADÍSTICAS ====== -->
-        <div class="statistics-section">
-            <div class="statistics-grid">
-                <!-- GRÁFICO DE TENDENCIAS (7 DÍAS) -->
-                <div class="statistics-card">
-                    <h3>Tendencia Últimos 7 Días</h3>
-                    <div class="chart-container">
-                        <canvas id="trendsChart"></canvas>
-                    </div>
-                    <div id="trendStats">
-                        <div class="trend-stat">
-                            <span class="trend-label">Detecciones totales:</span>
-                            <span class="trend-value" id="totalDetections">0</span>
-                        </div>
-                        <div class="trend-stat">
-                            <span class="trend-label">Alertas totales:</span>
-                            <span class="trend-value" id="totalAlerts">0</span>
-                        </div>
-                        <div class="trend-stat">
-                            <span class="trend-label">Imágenes capturadas:</span>
-                            <span class="trend-value" id="totalImages">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ALERTAS ACTIVAS Y RESUELTAS -->
-                <div class="statistics-card">
-                    <h3>Alertas por Severidad</h3>
-                    <table class="alerts-table">
-                        <thead>
-                            <tr>
-                                <th>Tipo</th>
-                                <th>Severidad</th>
-                                <th>Estado</th>
-                                <th>Duración</th>
-                                <th>Imágenes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="alertsTableBody">
-                            <tr>
-                                <td colspan="5" style="text-align: center; padding: 30px;">
-                                    <div class="loading">Cargando alertas...</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+          <!-- ALERTAS ACTIVAS Y RESUELTAS -->
+          <div class="statistics-card">
+            <h3>Alertas por Severidad</h3>
+            <table class="alerts-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Severidad</th>
+                  <th>Estado</th>
+                  <th>Duración</th>
+                  <th>Imágenes</th>
+                </tr>
+              </thead>
+              <tbody id="alertsTableBody">
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 30px">
+                    <div class="loading">Cargando alertas...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
-    
+
     <div class="connection-indicator">
-        <span id="connectionStatus">Conectando...</span>
+      <span id="connectionStatus">Conectando...</span>
     </div>
-    
+
     <script>
-        const socket = io();
-        let currentImagePath = null;
-        let isPlayingAlert = false;
-        let trendsChart = null;
-        let alertAudio = null;  // ← AGREGAR ESTA LÍNEA
+      const socket = io();
+      let currentImagePath = null;
+      let isPlayingAlert = false;
+      let trendsChart = null;
+      let alertAudio = null;
 
-        // ====== FUNCIONES DE SONIDO ======
-        function playAlertSound() {
-            if (isPlayingAlert) return;
+      // ====== HELPER PARA ACCESO SEGURO A ELEMENTOS DOM ======
+      function safeGetElement(id) {
+        const element = document.getElementById(id);
+        if (!element) {
+          console.warn(`Elemento con ID '${id}' no encontrado en el DOM`);
+        }
+        return element;
+      }
+
+      function safeSetText(id, text) {
+        const element = safeGetElement(id);
+        if (element) {
+          element.textContent = text;
+        }
+      }
+
+      function safeSetHTML(id, html) {
+        const element = safeGetElement(id);
+        if (element) {
+          element.innerHTML = html;
+        }
+      }
+
+      // ====== FUNCIONES DE SONIDO ======
+      function playAlertSound() {
+        if (isPlayingAlert) return;
+
+        // Crear elemento de audio
+        if (!alertAudio) {
+          alertAudio = new Audio("sounds/alert.mp3");
+          alertAudio.loop = true;
+          alertAudio.volume = 0.8;
+        }
+
+        alertAudio.currentTime = 0;
+        alertAudio
+          .play()
+          .then(() => {
             isPlayingAlert = true;
-
-            // Crear elemento de audio
-            if (!alertAudio) {
-                alertAudio = new Audio('sounds/alert.mp3');
-                alertAudio.loop = true;  // ← Reproducir en bucle
-                alertAudio.volume = 0.8;
+            // Mostrar botón de detener solo si el audio se reproduce correctamente
+            const stopBtn = document.getElementById("stopAlertBtn");
+            if (stopBtn) {
+              stopBtn.style.display = "block";
             }
-
-            alertAudio.currentTime = 0;
-            alertAudio.play().catch(err => {
-                console.error('Error reproduciendo audio:', err);
-                isPlayingAlert = false;
-            });
-
-            // Mostrar botón de detener
-            document.getElementById('stopAlertBtn').style.display = 'block';
-        }
-
-        function stopAlert() {
-            if (alertAudio) {
-                alertAudio.pause();
-                alertAudio.currentTime = 0;
-            }
+          })
+          .catch((err) => {
+            console.warn(
+              "Audio bloqueado por el navegador - requiere interacción del usuario:",
+              err.message
+            );
             isPlayingAlert = false;
-            document.getElementById('stopAlertBtn').style.display = 'none';
 
-            // Emitir evento al servidor para resolver alerta
-            socket.emit('resolveAlert');
-        }
+            // Mostrar notificación visual alternativa
+            showAudioBlockedNotification();
+          });
+      }
 
-        // ====== FUNCIONES DE TIEMPO ======
-        function toBogotaTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString('es-CO', {
-                timeZone: 'America/Bogota',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-        }
+      function showAudioBlockedNotification() {
+        // Crear notificación visual para indicar que el audio está bloqueado
+        const notification = document.createElement("div");
+        notification.style.cssText = `
+          position: fixed;
+          top: 80px;
+          right: 20px;
+          background: var(--warning);
+          color: var(--warning-foreground);
+          padding: 10px 15px;
+          border-radius: 5px;
+          z-index: 9999;
+          font-size: 14px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          animation: slideIn 0.3s ease-out;
+        `;
+        notification.innerHTML = `
+          <strong>🔊 Audio bloqueado</strong><br>
+          Haz clic en cualquier parte para habilitar las alertas de sonido
+        `;
 
-        function formatDuration(seconds) {
-            if (!seconds) return '--';
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            
-            if (hours > 0) {
-                return `${hours}h ${minutes}m`;
-            } else if (minutes > 0) {
-                return `${minutes}m ${secs}s`;
-            } else {
-                return `${secs}s`;
-            }
-        }
-        
-        // ====== EVENTOS SOCKET ======
-        socket.on('connect', () => {
-            document.getElementById('connectionStatus').innerHTML = 'Conectado';
-            loadImageHistory();
-            loadStatistics();
-            loadAlerts();
-        });
-        
-        socket.on('disconnect', () => {
-            document.getElementById('connectionStatus').innerHTML = 'Desconectado';
-        });
-        
-        socket.on('initialState', (status) => {
-            updateDeviceStatus(status.esp32Connected, status.esp32IP); 
-            updateDetectionCount(status.totalDetections);
-            updateAlertStatus(status.fireActive, status.lastAlert ? status.lastAlert.timestamp : null);
-        });
-        
-        socket.on('fireAlert', (data) => {
-            updateAlertStatus(data.detected, data.timestamp);
-            updateDetectionCount(data.detections);
-            loadAlerts();
-        });
-        
-        socket.on('deviceStatus', (data) => {
-            updateDeviceStatus(data.connected, data.ip);
-        });
-        
-        socket.on('newImage', (data) => {
-            currentImagePath = data.path;
-            displayImage(currentImagePath, data.localTime || toBogotaTime(data.timestamp));
-        });
+        document.body.appendChild(notification);
 
-        socket.on('captureRequested', (data) => {
-            if (!data.success) {
-                alert('Error: ' + data.error);
-            }
-        });
-        
-        // ====== FUNCIONES DE ACTUALIZACIÓN UI ======
-        function updateDeviceStatus(connected, ip) {
-            const statusEl = document.getElementById('deviceStatus');  // ← Cambiar de 'deviceStatus2' a 'deviceStatus'
-            const iconEl = document.getElementById('deviceIcon');
-            if (connected) {
-                statusEl.textContent = 'Conectado';  // ← Simplificar, sin HTML
-                iconEl.textContent = '✓';
-            } else {
-                statusEl.textContent = 'Desconectado';  // ← Simplificar
-                iconEl.textContent = '✕';
-            }
-        }
-        
-        function updateAlertStatus(detected, timestamp) {
-            const alertBannerEl = document.getElementById('alertBanner');
-            const lastAlertEl = document.getElementById('lastAlertTime');
-            const stopBtn = document.getElementById('stopAlertBtn');
+        // Eliminar después de 5 segundos
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.remove();
+          }
+        }, 5000);
 
-            if (detected) {
-                alertBannerEl.classList.add('active');
-                stopBtn.style.display = 'block';
-                playAlertSound();
-            } else {
-                alertBannerEl.classList.remove('active');
-                stopBtn.style.display = 'none';
-                stopAlert();
-            }
-            if (timestamp) {
-                const formattedTime = toBogotaTime(timestamp);
-                lastAlertEl.textContent = formattedTime.split(' ')[1];
-            }
-        }
-        
-        function updateDetectionCount(count) {
-            document.getElementById('detectionsCount').textContent = count || 0;
-        }
-        
-        function displayImage(path, timestamp) {
-            const container = document.getElementById('imageContainer');
-            const displayTime = timestamp || toBogotaTime(new Date());
-            container.innerHTML = '<img src="' + path + '" alt="Captura de incendio" onerror="handleImageError(this)">' +
-                                 '<div class="image-overlay">' + displayTime + '</div>';
-            document.getElementById('downloadBtn').disabled = false;
-            loadImageHistory();
-        }
-        
-        function handleImageError(img) {
-            img.parentElement.innerHTML = '<div class="no-image">' +
-                                        '<div class="no-image-icon">Error</div>' +
-                                        '<p>Error cargando imagen</p>' +
-                                        '</div>';
-        }
-        
-        function loadImageHistory() {
-            fetch('/api/images')
-                .then(res => res.json())
-                .then(data => {
-                    const historyList = document.getElementById('historyList');
-                    if (data.success && data.data.length > 0) {
-                        historyList.innerHTML = data.data.map(img => 
-                            '<div class="history-item" onclick="displayImage(\'' + img.path + '\')">' +
-                                '<span>' + img.filename + '</span>' +
-                                '<span class="history-time">' + formatTimestamp(img.timestamp) + '</span>' +
-                            '</div>'
-                        ).join('');
-                    } else {
-                        historyList.innerHTML = '<div class="loading">Sin capturas guardadas</div>';
-                    }
-                })
-                .catch(err => {
-                    document.getElementById('historyList').innerHTML = '<div class="loading">Error cargando historial</div>';
-                });
-        }
-        
-        function formatTimestamp(timestamp) {
-            const match = timestamp.match(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/);
-            if (match) {
-                return match[3] + '/' + match[2] + '/' + match[1] + ' ' + match[4] + ':' + match[5];
-            }
-            return timestamp;
-        }
-        
-        // ====== ESTADÍSTICAS ======
-        async function loadStatistics() {
-            try {
-                const response = await fetch('/api/statistics');
-                if (!response.ok) throw new Error('Error en la API');
-                
-                const data = await response.json();
-                if (data.success && data.data) {
-                    updateTrendsChart(data.data);
+        // Habilitar audio cuando el usuario interactúe
+        const enableAudio = () => {
+          if (alertAudio) {
+            alertAudio
+              .play()
+              .then(() => {
+                isPlayingAlert = true;
+                const stopBtn = document.getElementById("stopAlertBtn");
+                if (stopBtn) {
+                  stopBtn.style.display = "block";
                 }
-            } catch (error) {
-                console.error('Error cargando estadísticas:', error);
-            }
+                notification.remove();
+              })
+              .catch(() => {
+                // Si sigue fallando, no hacer nada más
+              });
+          }
+          document.removeEventListener("click", enableAudio, { once: true });
+        };
+
+        document.addEventListener("click", enableAudio, { once: true });
+      }
+
+      function stopAlert() {
+        if (alertAudio) {
+          alertAudio.pause();
+          alertAudio.currentTime = 0;
+        }
+        isPlayingAlert = false;
+
+        const stopBtn = document.getElementById("stopAlertBtn");
+        if (stopBtn) stopBtn.style.display = "none";
+
+        announceAlert("Sonido de alerta detenido");
+      }
+
+      // ====== FUNCIONES DE TIEMPO ======
+      function toBogotaTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString("es-CO", {
+          timeZone: "America/Bogota",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+      }
+
+      function formatDuration(seconds) {
+        if (!seconds) return "--";
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        if (hours > 0) {
+          return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${secs}s`;
+        } else {
+          return `${secs}s`;
+        }
+      }
+
+      // ====== EVENTOS SOCKET ======
+      socket.on("connect", () => {
+        safeSetHTML("connectionStatus", "Conectado");
+        console.log("✓ Conectado al servidor WebSocket");
+        loadImageHistory();
+        loadStatistics();
+        loadAlerts();
+        announceAlert("Conectado al sistema de monitoreo");
+      });
+
+      socket.on("disconnect", () => {
+        safeSetHTML("connectionStatus", "Desconectado");
+        console.log("⚠️ Desconectado del servidor WebSocket");
+        announceAlert("Desconectado del sistema de monitoreo");
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("❌ Error de conexión WebSocket:", error);
+        safeSetHTML("connectionStatus", "Error de conexión");
+      });
+
+      socket.on("initialState", (status) => {
+        console.log("📋 Estado inicial del sistema recibido:", status);
+
+        // Actualizar estado del dispositivo
+        if (typeof status.esp32Connected !== "undefined") {
+          updateDeviceStatus(status.esp32Connected, status.esp32IP);
         }
 
-        function updateTrendsChart(statistics) {
-            const labels = [];
-            const detections = [];
-            const alerts = [];
-            const images = [];
-            let totalDet = 0, totalAlr = 0, totalImg = 0;
+        // Actualizar contador de detecciones
+        if (typeof status.totalDetections !== "undefined") {
+          updateDetectionCount(status.totalDetections);
+        }
 
-            // Ordenar por fecha (más antiguo primero)
-            const sorted = statistics.sort((a, b) => new Date(a.date) - new Date(b.date));
+        // Actualizar estado de alerta
+        const isFireActive = status.fireActive || false;
+        const alertTimestamp = status.lastAlert
+          ? status.lastAlert.timestamp
+          : null;
 
-            sorted.forEach(stat => {
-                const date = new Date(stat.date);
-                labels.push(date.toLocaleDateString('es-CO', { month: 'short', day: 'numeric' }));
-                detections.push(stat.total_detections || 0);
-                alerts.push(stat.total_alerts || 0);
-                images.push(stat.images_captured || 0);
-                totalDet += stat.total_detections || 0;
-                totalAlr += stat.total_alerts || 0;
-                totalImg += stat.images_captured || 0;
-            });
+        if (isFireActive && alertTimestamp) {
+          console.log("⚠️ Sistema iniciado con alerta activa");
+          updateAlertStatus(true, alertTimestamp);
+        } else {
+          updateAlertStatus(false, null);
+        }
 
-            // Actualizar totales
-            document.getElementById('totalDetections').textContent = totalDet;
-            document.getElementById('totalAlerts').textContent = totalAlr;
-            document.getElementById('totalImages').textContent = totalImg;
+        // Log del estado para debugging
+        console.log(
+          `📊 Estado inicial - ESP32: ${
+            status.esp32Connected ? "Conectado" : "Desconectado"
+          }, Fuego: ${isFireActive ? "Activo" : "Inactivo"}, Detecciones: ${
+            status.totalDetections || 0
+          }`
+        );
+      });
 
-            // Destruir gráfico anterior si existe
-            if (trendsChart) {
-                trendsChart.destroy();
+      socket.on("fireAlert", (data) => {
+        console.log("🔥 Evento de alerta recibido:", data);
+
+        const isActive = data.detected || false;
+        const timestamp = data.timestamp || new Date().toISOString();
+        const detections = data.detections || 0;
+
+        updateAlertStatus(isActive, timestamp);
+        updateDetectionCount(detections);
+
+        // Recargar datos para mantener sincronización
+        setTimeout(() => {
+          loadAlerts();
+          loadStatistics();
+        }, 1000);
+
+        if (isActive) {
+          console.log(`🚨 ALERTA ACTIVA - Detecciones: ${detections}`);
+        } else {
+          console.log("✅ Alerta resuelta");
+        }
+      });
+
+      socket.on("deviceStatus", (data) => {
+        updateDeviceStatus(data.connected, data.ip);
+      });
+
+      socket.on("newImage", (data) => {
+        currentImagePath = data.path;
+        displayImage(
+          currentImagePath,
+          data.localTime || toBogotaTime(data.timestamp)
+        );
+      });
+
+      socket.on("captureRequested", (data) => {
+        if (!data.success) {
+          alert("Error: " + data.error);
+        }
+      });
+
+      // ====== FUNCIONES DE ACTUALIZACIÓN UI ======
+      function updateDeviceStatus(connected, ip) {
+        const statusEl = document.getElementById("deviceStatus");
+        const iconEl = document.getElementById("deviceIcon");
+        const statusCard = statusEl.closest(".status-card");
+
+        if (connected) {
+          statusEl.innerHTML = '<span class="status-online">Conectado</span>';
+          iconEl.textContent = "✓";
+          statusEl.setAttribute("aria-label", "ESP32-CAM conectado");
+          if (statusCard) statusCard.setAttribute("data-status", "online");
+          announceAlert("Dispositivo ESP32-CAM conectado");
+        } else {
+          statusEl.innerHTML =
+            '<span class="status-offline">Desconectado</span>';
+          iconEl.textContent = "✕";
+          statusEl.setAttribute("aria-label", "ESP32-CAM desconectado");
+          if (statusCard) statusCard.setAttribute("data-status", "offline");
+          announceAlert("Dispositivo ESP32-CAM desconectado");
+        }
+      }
+
+      function updateAlertStatus(detected, timestamp) {
+        const alertBannerEl = document.getElementById("alertBanner");
+        const alertOverlayEl = document.getElementById("alertOverlay");
+        const lastAlertEl = document.getElementById("lastAlertTime");
+        const stopBtn = document.getElementById("stopAlertBtn");
+        const body = document.body;
+
+        if (detected) {
+          // Activar banner sticky
+          alertBannerEl.classList.add("active");
+          body.classList.add("alert-active");
+
+          // Mostrar modal de pantalla completa
+          alertOverlayEl.classList.add("active");
+
+          // Configurar accesibilidad
+          alertOverlayEl.setAttribute("aria-hidden", "false");
+          document.body.style.overflow = "hidden"; // Prevenir scroll
+
+          // Enfocar el modal para lectores de pantalla
+          setTimeout(() => {
+            const alertTitle = document.getElementById("alertTitle");
+            if (alertTitle) alertTitle.focus();
+          }, 300);
+
+          if (stopBtn) stopBtn.style.display = "block";
+          playAlertSound();
+
+          // Anunciar alerta para lectores de pantalla
+          announceAlert(
+            "Alerta de incendio detectada. Revise el área inmediatamente."
+          );
+        } else {
+          alertBannerEl.classList.remove("active");
+          alertOverlayEl.classList.remove("active");
+          body.classList.remove("alert-active");
+
+          // Restaurar accesibilidad
+          alertOverlayEl.setAttribute("aria-hidden", "true");
+          document.body.style.overflow = "";
+
+          if (stopBtn) stopBtn.style.display = "none";
+          stopAlert();
+        }
+
+        if (timestamp) {
+          const formattedTime = toBogotaTime(timestamp);
+          lastAlertEl.textContent = formattedTime.split(" ")[1];
+        }
+      }
+
+      // Nuevas funciones para manejo de alertas
+      function acknowledgeAlert() {
+        const alertOverlayEl = document.getElementById("alertOverlay");
+        alertOverlayEl.classList.remove("active");
+        alertOverlayEl.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+
+        // Mantener el banner pero quitar el modal
+        announceAlert("Alerta reconocida");
+      }
+
+      function dismissBanner() {
+        resolveAlert(); // Usar la función centralizada
+      }
+
+      // Función para anuncios de accesibilidad
+      function announceAlert(message) {
+        const announcement = document.createElement("div");
+        announcement.setAttribute("aria-live", "assertive");
+        announcement.setAttribute("aria-atomic", "true");
+        announcement.className = "sr-only";
+        announcement.textContent = message;
+        document.body.appendChild(announcement);
+
+        setTimeout(() => {
+          if (document.body.contains(announcement)) {
+            document.body.removeChild(announcement);
+          }
+        }, 1000);
+      }
+
+      // Función mejorada para resolver alertas que es compatible con server.js
+      function resolveAlert() {
+        const alertBannerEl = document.getElementById("alertBanner");
+        const alertOverlayEl = document.getElementById("alertOverlay");
+        const body = document.body;
+
+        // Cerrar UI de alerta
+        alertBannerEl.classList.remove("active");
+        alertOverlayEl.classList.remove("active");
+        body.classList.remove("alert-active");
+
+        // Restaurar accesibilidad
+        alertOverlayEl.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+
+        // Detener sonido
+        stopAlert();
+
+        // Emitir evento al servidor (como espera server.js)
+        socket.emit("resolveAlert");
+
+        // Anuncio para accesibilidad
+        announceAlert("Alerta resuelta exitosamente");
+
+        console.log("🔧 Alerta resuelta desde interfaz web");
+      }
+
+      function updateDetectionCount(count) {
+        // Actualizar el total en las estadísticas usando función helper
+        safeSetText("totalDetections", count || 0);
+        console.log(`📊 Detecciones actualizadas: ${count || 0}`);
+      }
+
+      function displayImage(path, timestamp) {
+        const container = document.getElementById("imageContainer");
+        const displayTime = timestamp || toBogotaTime(new Date());
+        container.innerHTML = '<img src="';
+        path +
+          '" alt="Captura de incendio" onerror="handleImageError(this)">' +
+          '<div class="image-overlay">' +
+          displayTime +
+          "</div>";
+        document.getElementById("downloadBtn").disabled = false;
+        loadImageHistory();
+      }
+
+      function handleImageError(img) {
+        img.parentElement.innerHTML =
+          '<div class="no-image">' +
+          '<div class="no-image-icon">Error</div>' +
+          "<p>Error cargando imagen</p>" +
+          "</div>";
+      }
+
+      function loadImageHistory() {
+        fetch("/api/images")
+          .then((res) => res.json())
+          .then((data) => {
+            const historyList = document.getElementById("historyList");
+            if (!historyList) return;
+
+            if (data.success && data.data.length > 0) {
+              historyList.innerHTML = data.data
+                .map(
+                  (img) =>
+                    '<div class="history-item" onclick="displayImage(\'' +
+                    img.path +
+                    "')\">" +
+                    "<span>" +
+                    img.filename +
+                    "</span>" +
+                    '<span class="history-time">' +
+                    formatTimestamp(img.timestamp) +
+                    "</span>" +
+                    "</div>"
+                )
+                .join("");
+            } else {
+              historyList.innerHTML =
+                '<div class="loading">Sin capturas guardadas</div>';
             }
+          })
+          .catch((err) => {
+            const historyList = document.getElementById("historyList");
+            if (historyList) {
+              historyList.innerHTML =
+                '<div class="loading">Error cargando historial</div>';
+            }
+          });
+      }
 
-            // Crear nuevo gráfico
-            const ctx = document.getElementById('trendsChart');
-            if (!ctx) return;
+      function formatTimestamp(timestamp) {
+        const match = timestamp.match(
+          /(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/
+        );
+        if (match) {
+          return (
+            match[3] +
+            "/" +
+            match[2] +
+            "/" +
+            match[1] +
+            " " +
+            match[4] +
+            ":" +
+            match[5]
+          );
+        }
+        return timestamp;
+      }
 
-            trendsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Detecciones',
-                            data: detections,
-                            borderColor: '#008994',
-                            backgroundColor: 'rgba(0, 137, 148, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#008994',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2
-                        },
-                        {
-                            label: 'Alertas',
-                            data: alerts,
-                            borderColor: '#d9a514',
-                            backgroundColor: 'rgba(217, 165, 20, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#d9a514',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2
-                        },
-                        {
-                            label: 'Imágenes',
-                            data: images,
-                            borderColor: '#3baa18',
-                            backgroundColor: 'rgba(59, 170, 24, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#3baa18',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2
-                        }
-                    ]
+      // ====== ESTADÍSTICAS ======
+      async function loadStatistics() {
+        try {
+          console.log("📊 Cargando estadísticas...");
+          const response = await fetch("/api/statistics");
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          if (data.success && data.data) {
+            console.log(
+              "✓ Estadísticas cargadas:",
+              data.data.length,
+              "registros"
+            );
+            updateTrendsChart(data.data);
+          } else {
+            console.warn("⚠️ No hay datos de estadísticas disponibles");
+            // Mostrar gráfico vacío o mensaje
+            updateTrendsChart([]);
+          }
+        } catch (error) {
+          console.error("❌ Error cargando estadísticas:", error);
+          // En caso de error, mostrar datos mock o mensaje de error
+          updateTrendsChart([]);
+        }
+      }
+
+      function updateTrendsChart(statistics) {
+        const labels = [];
+        const detections = [];
+        const alerts = [];
+        const images = [];
+        let totalDet = 0,
+          totalAlr = 0,
+          totalImg = 0;
+
+        // Ordenar por fecha (más antiguo primero)
+        const sorted = statistics.sort(
+          (a, b) => new Date(a.date) - new Date(b.date)
+        );
+
+        sorted.forEach((stat) => {
+          const date = new Date(stat.date);
+          labels.push(
+            date.toLocaleDateString("es-CO", { month: "short", day: "numeric" })
+          );
+          detections.push(stat.total_detections || 0);
+          alerts.push(stat.total_alerts || 0);
+          images.push(stat.images_captured || 0);
+          totalDet += stat.total_detections || 0;
+          totalAlr += stat.total_alerts || 0;
+          totalImg += stat.images_captured || 0;
+        });
+
+        // Actualizar totales con validación
+        const totalDetectionsEl = document.getElementById("totalDetections");
+        if (totalDetectionsEl) totalDetectionsEl.textContent = totalDet;
+
+        const totalAlertsEl = document.getElementById("totalAlerts");
+        if (totalAlertsEl) totalAlertsEl.textContent = totalAlr;
+
+        const totalImagesEl = document.getElementById("totalImages");
+        if (totalImagesEl) totalImagesEl.textContent = totalImg;
+
+        // Destruir gráfico anterior si existe
+        if (trendsChart) {
+          trendsChart.destroy();
+        }
+
+        // Crear nuevo gráfico
+        const ctx = document.getElementById("trendsChart");
+        if (!ctx) return;
+
+        trendsChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Detecciones",
+                data: detections,
+                borderColor: "#008994",
+                backgroundColor: "rgba(0, 137, 148, 0.1)",
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: "#008994",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2,
+              },
+              {
+                label: "Alertas",
+                data: alerts,
+                borderColor: "#d9a514",
+                backgroundColor: "rgba(217, 165, 20, 0.1)",
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: "#d9a514",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2,
+              },
+              {
+                label: "Imágenes",
+                data: images,
+                borderColor: "#3baa18",
+                backgroundColor: "rgba(59, 170, 24, 0.1)",
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointBackgroundColor: "#3baa18",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  font: { size: 12 },
+                  padding: 15,
+                  usePointStyle: true,
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: { size: 12 },
-                                padding: 15,
-                                usePointStyle: true
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 },
-                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 },
+                grid: { color: "rgba(0, 0, 0, 0.05)" },
+              },
+              x: {
+                grid: { display: false },
+              },
+            },
+          },
+        });
+      }
+
+      async function loadAlerts() {
+        try {
+          console.log("🚨 Cargando alertas...");
+          const response = await fetch("/api/alerts");
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          if (data.success && data.data) {
+            console.log("✓ Alertas cargadas:", data.data.length, "alertas");
+            updateAlertsTable(data.data);
+          } else {
+            console.warn("⚠️ No hay alertas disponibles");
+            updateAlertsTable([]);
+          }
+        } catch (error) {
+          console.error("❌ Error cargando alertas:", error);
+          const tbody = document.getElementById("alertsTableBody");
+          if (tbody) {
+            tbody.innerHTML =
+              '<tr><td colspan="5" style="text-align: center; color: var(--error);">Error cargando alertas: ' +
+              error.message +
+              "</td></tr>";
+          }
+        }
+      }
+
+      function updateAlertsTable(alerts) {
+        const tbody = document.getElementById("alertsTableBody");
+
+        if (!alerts || alerts.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="empty-state">No hay alertas registradas</td></tr>';
+          return;
         }
 
-        async function loadAlerts() {
-            try {
-                const response = await fetch('/api/alerts');
-                if (!response.ok) throw new Error('Error en la API');
-                
-                const data = await response.json();
-                if (data.success && data.data) {
-                    updateAlertsTable(data.data);
-                }
-            } catch (error) {
-                console.error('Error cargando alertas:', error);
-                document.getElementById('alertsTableBody').innerHTML = 
-                    '<tr><td colspan="5" style="text-align: center;">Error cargando alertas</td></tr>';
-            }
-        }
+        const rows = alerts
+          .slice(0, 10)
+          .map((alert) => {
+            const severity = alert.severity
+              ? alert.severity.toLowerCase()
+              : "medium";
+            const status = alert.status ? alert.status.toLowerCase() : "active";
+            const duration = formatDuration(alert.duration_seconds);
+            const statusClass =
+              status === "active" ? "status-active" : "status-resolved";
+            const severityClass = `severity-${severity}`;
 
-        function updateAlertsTable(alerts) {
-            const tbody = document.getElementById('alertsTableBody');
-            
-            if (!alerts || alerts.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay alertas registradas</td></tr>';
-                return;
-            }
-
-            const rows = alerts.slice(0, 10).map(alert => {
-                const severity = alert.severity ? alert.severity.toLowerCase() : 'medium';
-                const status = alert.status ? alert.status.toLowerCase() : 'active';
-                const duration = formatDuration(alert.duration_seconds);
-                const statusClass = status === 'active' ? 'status-active' : 'status-resolved';
-                const severityClass = `severity-${severity}`;
-                
-                return `
+            return `
                     <tr>
-                        <td>${alert.alert_type || 'UNKNOWN'}</td>
-                        <td><span class="severity-badge ${severityClass}">${alert.severity || 'MEDIUM'}</span></td>
-                        <td><span class="status-badge ${statusClass}">${alert.status || 'UNKNOWN'}</span></td>
+                        <td>${alert.alert_type || "UNKNOWN"}</td>
+                        <td><span class="severity-badge ${severityClass}">${
+              alert.severity || "MEDIUM"
+            }</span></td>
+                        <td><span class="status-badge ${statusClass}">${
+              alert.status || "UNKNOWN"
+            }</span></td>
                         <td>${duration}</td>
                         <td>${alert.images_count || 0}</td>
                     </tr>
                 `;
-            }).join('');
+          })
+          .join("");
 
-            tbody.innerHTML = rows;
+        tbody.innerHTML = rows;
+      }
+
+      // ====== FUNCIONES DE CONTROL ======
+      function requestCapture() {
+        const btn = document.getElementById("captureBtn");
+        btn.disabled = true;
+        btn.textContent = "Capturando...";
+        socket.emit("requestCapture");
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = "Capturar Ahora";
+        }, 3000);
+      }
+
+      function refreshImage() {
+        if (currentImagePath) {
+          const path = currentImagePath.split("?")[0];
+          displayImage(path + "?t=" + Date.now());
+        } else {
+          loadImageHistory();
         }
-        
-        // ====== FUNCIONES DE CONTROL ======
-        function requestCapture() {
-            const btn = document.getElementById('captureBtn');
-            btn.disabled = true;
-            btn.textContent = 'Capturando...';
-            socket.emit('requestCapture');
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.textContent = 'Capturar Ahora';
-            }, 3000);
+      }
+
+      function downloadImage() {
+        if (!currentImagePath) {
+          alert("No hay imagen para descargar");
+          return;
         }
-        
-        function refreshImage() {
-            if (currentImagePath) {
-                const path = currentImagePath.split('?')[0];
-                displayImage(path + '?t=' + Date.now());
+        const filename = currentImagePath.split("/").pop().split("?")[0];
+        const link = document.createElement("a");
+        link.href = currentImagePath;
+        link.download = filename || "fire_capture.jpg";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // ====== MANEJO DE TECLADO Y ACCESIBILIDAD ======
+      document.addEventListener("keydown", function (event) {
+        const alertOverlay = document.getElementById("alertOverlay");
+
+        // Cerrar modal con Escape
+        if (
+          event.key === "Escape" &&
+          alertOverlay.classList.contains("active")
+        ) {
+          acknowledgeAlert();
+        }
+
+        // Navegación por teclado en el modal
+        if (alertOverlay.classList.contains("active")) {
+          const focusableElements = alertOverlay.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length - 1];
+
+          if (event.key === "Tab") {
+            if (event.shiftKey) {
+              if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+              }
             } else {
-                loadImageHistory();
+              if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+              }
             }
+          }
         }
-        
-        function downloadImage() {
-            if (!currentImagePath) {
-                alert('No hay imagen para descargar');
-                return;
-            }
-            const filename = currentImagePath.split('/').pop().split('?')[0];
-            const link = document.createElement('a');
-            link.href = currentImagePath;
-            link.download = filename || 'fire_capture.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-        
-        // ====== INICIALIZACIÓN ======
-        setTimeout(loadImageHistory, 1000);
-        setTimeout(loadStatistics, 1000);
-        setTimeout(loadAlerts, 1000);
+      });
 
-        setInterval(() => {
-            if (socket.connected) {
-                loadStatistics();
-                loadAlerts();
+      // Mejorar navegación por teclado en elementos interactivos
+      document.addEventListener("DOMContentLoaded", function () {
+        // Hacer los items del historial focusables
+        const historyItems = document.querySelectorAll(".history-item");
+        historyItems.forEach((item) => {
+          item.setAttribute("tabindex", "0");
+          item.setAttribute("role", "button");
+
+          item.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              item.click();
             }
-        }, 60000); // Actualizar cada minuto
+          });
+        });
+      });
+
+      // ====== INICIALIZACIÓN ======
+      setTimeout(loadImageHistory, 1000);
+      setTimeout(loadStatistics, 1000);
+      setTimeout(loadAlerts, 1000);
+
+      setInterval(() => {
+        if (socket.connected) {
+          loadStatistics();
+          loadAlerts();
+        }
+      }, 60000); // Actualizar cada minuto
+
+      // Configuración inicial de accesibilidad
+      document
+        .getElementById("alertOverlay")
+        .setAttribute("aria-hidden", "true");
     </script>
-</body>
+  </body>
 </html>
