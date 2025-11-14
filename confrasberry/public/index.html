@@ -934,6 +934,7 @@
             Se ha detectado fuego en el área monitoreada. Tome las medidas
             necesarias inmediatamente.
           </p>
+          <div id="alertImageContainer" style="margin: 20px 0"></div>
           <div class="alert-actions">
             <button
               class="alert-button primary"
@@ -947,14 +948,7 @@
               onclick="acknowledgeAlert()"
               aria-describedby="alertTitle"
             >
-              SOLO CERRAR MODAL
-            </button>
-            <button
-              class="alert-button"
-              onclick="stopAlert()"
-              aria-describedby="alertTitle"
-            >
-              DETENER SONIDO
+              X
             </button>
           </div>
         </div>
@@ -1370,6 +1364,17 @@
           if (stopBtn) stopBtn.style.display = "block";
           playAlertSound();
 
+          // Mostrar imagen en el modal de alerta
+          const alertImageContainer = document.getElementById(
+            "alertImageContainer"
+          );
+          if (alertImageContainer && currentImagePath) {
+            alertImageContainer.innerHTML =
+              '<img src="' +
+              currentImagePath +
+              '" alt="Última captura de incendio" style="max-width:100%;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.2);margin-bottom:10px;">';
+          }
+
           // Anunciar alerta para lectores de pantalla
           announceAlert(
             "Alerta de incendio detectada. Revise el área inmediatamente."
@@ -1460,8 +1465,9 @@
       function displayImage(path, timestamp) {
         const container = document.getElementById("imageContainer");
         const displayTime = timestamp || toBogotaTime(new Date());
-        container.innerHTML = '<img src="';
-        path +
+        container.innerHTML =
+          '<img src="' +
+          path +
           '" alt="Captura de incendio" onerror="handleImageError(this)">' +
           '<div class="image-overlay">' +
           displayTime +
