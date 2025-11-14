@@ -1460,13 +1460,20 @@
       function displayImage(path, timestamp) {
         const container = document.getElementById("imageContainer");
         const displayTime = timestamp || toBogotaTime(new Date());
-        container.innerHTML = '<img src="';
-        path +
+
+        // PROBLEMA: Esta concatenación está mal formada
+        container.innerHTML =
+          '<img src="' +
+          path +
           '" alt="Captura de incendio" onerror="handleImageError(this)">' +
           '<div class="image-overlay">' +
           displayTime +
           "</div>";
-        document.getElementById("downloadBtn").disabled = false;
+
+        const downloadBtn = document.getElementById("downloadBtn");
+        if (downloadBtn) {
+          downloadBtn.disabled = false;
+        }
         loadImageHistory();
       }
 
