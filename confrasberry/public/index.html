@@ -1183,6 +1183,11 @@
         const stopBtn = document.getElementById("stopAlertBtn");
         if (stopBtn) stopBtn.style.display = "none";
 
+        // Cerrar también el banner de alerta incendio activa
+        const alertBannerEl = document.getElementById("alertBanner");
+        if (alertBannerEl) alertBannerEl.classList.remove("active");
+        document.body.classList.remove("alert-active");
+
         announceAlert("Sonido de alerta detenido");
       }
 
@@ -1369,6 +1374,7 @@
             "alertImageContainer"
           );
           if (alertImageContainer && currentImagePath) {
+            // Usar la misma imagen que en la última captura (con cache buster si es necesario)
             alertImageContainer.innerHTML =
               '<img src="' +
               currentImagePath +

@@ -23,7 +23,7 @@ const char* ssid = "net";
 const char* password = "123456789";
 
 // ==== MQTT Configuration ====
-const char* mqtt_server = "192.168.137.72";  // IP de tu Raspberry
+const char* mqtt_server = "192.168.137.200";  // IP de tu Raspberry
 const int mqtt_port = 1883;
 const char* mqtt_client_id = "ESP32-CAM-FireDetector";
 
@@ -149,7 +149,7 @@ void captureAndSendImage() {
   Serial.printf("✓ Imagen capturada: %d bytes\n", fb->len);
 
   // CORRECCIÓN: Chunks más pequeños para evitar problemas de memoria
-  const int chunkSize = 2000;  // Reducido de 4000 a 2000
+  const int chunkSize = 2550;  // Reducido de 4000 a 2000
   const int totalChunks = (fb->len + chunkSize - 1) / chunkSize;
 
   // Metadata
