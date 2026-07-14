@@ -258,10 +258,3 @@ QUYCA/
 | Ronald Molinares | [@Ronaldmolinares](https://github.com/Ronaldmolinares) |
 
 ---
-
-## License
-
-No license file is currently detected in the repository metadata.
-
-> **TODO**
-> - Define and add an open-source license file (e.g., MIT, Apache-2.0, or GPL-3.0) and update the badge accordingly.
